@@ -1,0 +1,6 @@
+[package]
+name = "c-som"
+version = "0.1.0"
+authors = ["29rou <g196010r@icu.ac.jp>"]
+
+[dependencies]
