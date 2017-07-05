@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["29rou <g196010r@icu.ac.jp>"]
 
 [dependencies]
+image = "0.14.0"
+walkdir ="1"
