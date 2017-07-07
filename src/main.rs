@@ -6,7 +6,7 @@ struct ImgData<'a>{
     file_path: &'a path::Path,
 }
 
-type DataSet <'a> = Vec<ImgData<'a>>;
+type DataSet <'a> = Vec<&'a ImgData<'a>>;
 
 trait HasImg{
     fn get_class(&self) -> &str;
@@ -26,13 +26,19 @@ impl <'a> HasImg for  ImgData<'a>{
     }
 }
 
-
-fn prepare_dataset<'a> (p: &'a path::Path) ->  DataSet<'a>{
+fn prepare_dataset<'a> (p: &path::Path) ->  DataSet{
     extern crate walkdir;
-    let diriter = walkdir::WalkDir::new(p).into_iter();
-    let vec = diriter.map(|x| {ImgData{file_path: x.unwrap().path()}});
-    vec.collect::<DataSet>()
-}
+    let vec = 
+        walkdir::WalkDir::new(p)
+        .into_iter()
+        .map(|x| match x {
+            Ok(value) => ImgData{file_path: & value.path()},
+            Err(_) => panic!("Can't get path!!"),
+        });
+        //.collect::<DataSet<'a>>();
+        vec
+}                                                     
+                                
 
 fn main() {
     println!("Hello, world!");
