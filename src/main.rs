@@ -1,24 +1,34 @@
 extern crate image;
 use std::path;
-use std::borrow::Cow;
+//use std::borrow::Cow;
 
-struct ImgData<'a>{
-    file_path: &'a path::Path,
+type DataSet <'a>  = Vec<ImgData>;
+
+struct ImgData  {
+    path: Box<path::PathBuf>,
+    class: Box<String>,
 }
 
-type DataSet <'a> = Vec<&'a ImgData<'a>>;
-
 trait HasImg{
-    fn get_class(&self) -> &str;
     fn load_img(&self) -> image::RgbImage;
 }
 
-impl <'a> HasImg for  ImgData<'a>{
-    fn get_class (&self) -> &str{
-        self.file_path.parent().unwrap().to_str().unwrap()
+impl <'a> ImgData{
+    fn new (path:  &path::Path) -> Self{
+        let path = path.to_path_buf();
+        let path = Box::new(path);
+        //let path :Cow<'a, path::Path>= Cow::Borrowed(path);
+        let c = path.parent().unwrap().to_str().unwrap().to_string();
+        //let c = path;path::Path::new(path)path::Path::new(path)
+        //let c = c.parent().unwrap().to_str().unwrap();
+        //ImgData{path: path, class: Cow::Borrowed(c)}
+         ImgData{path: path, class: Box::new(c)}
     }
+}
+
+impl <'a> HasImg for  ImgData{
     fn load_img(&self) -> image::RgbImage{
-        let jpeg_img = image::open(&self.file_path);
+        let jpeg_img = image::open(&self.path.as_path());
         match jpeg_img{
             Ok(value) => value.to_rgb(),
             Err(_) => panic!("Can't read image!!"),
@@ -26,25 +36,20 @@ impl <'a> HasImg for  ImgData<'a>{
     }
 }
 
-fn prepare_dataset<'a> (p: &path::Path) ->  DataSet{
+fn prepare_dataset<'a> (p: &str) ->  DataSet{
     extern crate walkdir;
-    let vec = 
-        walkdir::WalkDir::new(p)
+    let ps = walkdir::WalkDir::new(p)
         .into_iter()
-        .map(|x| match x {
-            Ok(value) => ImgData{file_path: & value.path()},
-            Err(_) => panic!("Can't get path!!"),
-        });
-        //.collect::<DataSet<'a>>();
-        vec
-}                                                     
-                                
+        .map(|x| ImgData::new(x.unwrap().path()))
+        .collect::<Vec<ImgData>>();
+    ps
+}                                                                               
 
 fn main() {
     println!("Hello, world!");
-    let path = path::Path::new("/home/yoshiki/Downloads/101_ObjectCategories");
-    let dataset = prepare_dataset(path);
+    let path:&str = "/home/yoshiki/Downloads/101_ObjectCategories";
+    let dataset:DataSet = prepare_dataset(path);
     for entry in dataset{
-       println!("{}",entry.file_path.display());
+       println!("{}",entry.path.display());
     }
 }
