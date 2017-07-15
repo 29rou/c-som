@@ -16,7 +16,7 @@ type MiniBatch<'a>  = Vec<&'a ImgData>;
 struct CSom {
     layer_1: ndarray::Array2<f32>,
     layer_2: ndarray::Array2<f32>,
-    layer_3: ndarray::Array3<f32>,
+    layer_3: ndarray::Array2<f32>,
 }
 
 struct ImgData  {
@@ -31,7 +31,7 @@ impl  ImgData{
             .to_str().unwrap().to_string();
          ImgData{path: path, class: c}
     }
-    fn load_img(&self,size:usize) -> ndarray::Array2<u8>{
+    fn load_img(&self,size:usize) -> ndarray::Array2<f32>{
         use ndarray::Array;
         let img = image::imageops::resize(
             &image::open(&self.path.as_path())
@@ -41,9 +41,10 @@ impl  ImgData{
             size as u32,
             image::FilterType::Lanczos3
         );
+        let img:Vec<f32> = img.iter().map(|x| *x as f32).collect();
         let img_array = Array::from_shape_vec(
             (size,size),
-            img.into_vec()
+            img
         ).unwrap();
         img_array
     }
@@ -81,22 +82,22 @@ impl CSom {
         CSom{
             layer_1: Array::random((kernel,kernel),r_dist),
             layer_2: Array::random((kernel,kernel),r_dist),
-            layer_3: Array::random((kernel,kernel,kernel),r_dist)
+            layer_3: Array::random((kernel*10,kernel as usize),r_dist)
         }
     }
     
-    fn get_conv9(image:ndarray::Array2<u8>) -> ndarray::Array2<f32>{
+    fn get_conv9(image:ndarray::Array2<f32>) -> ndarray::Array2<f32>{
         let mut vec:Vec<f32> = Vec::new();
         let count = image.windows((3,3)).into_iter().count();
         for kernel in image.windows((3,3)){
             for entry in &kernel{
-                vec.push(*entry as f32);
+                vec.push(*entry);
             }
         }
         ndarray::Array::from_shape_vec((count,9),vec).unwrap()
     }
 
-    fn get_distances(&self,imgdata:&ImgData) -> Vec<Vec<(usize,f32)>>{
+    fn get_distances_layer1(&self,imgdata:&ImgData) -> Vec<Vec<(usize,f32)>>{
         let mut distances = Vec::new();
         let img = &CSom::get_conv9(imgdata.load_img(32));
         for kernel in img.genrows(){
@@ -113,10 +114,50 @@ impl CSom {
         }
         distances
     }
-
-    fn get_winners (&self, imgdata:&ImgData) -> Vec<(usize)>{
-        let distances = self.get_distances(imgdata);
-        let init = (10 as usize, (0.0/0.0));
+    fn get_distances_layer2(&self,winners:&Vec<usize>) -> Vec<Vec<(usize,f32)>>{
+        let mut distances = Vec::new();
+        let count = (winners.iter().count() as f32).sqrt() as usize;
+        let winners = winners.iter().map(|x| *x as f32).collect();
+        let winners = ndarray::Array::from_shape_vec((count,count),winners)
+                    .expect("Can't convert!!:layer2");
+        let img = &CSom::get_conv9(winners);
+        for kernel in img.genrows() {
+            let mut vec = Vec::new();
+            for (i,cell) in self.layer_2.genrows().into_iter().enumerate(){
+                let diff = &cell - &kernel;
+                let dist = &diff
+                    .map(|x|x.powf(2.0))
+                    .scalar_sum()
+                    .sqrt();
+                vec.push((i,*dist));
+            }
+            distances.push(vec);
+        }
+        distances
+    }
+    fn get_distances_layer3(&self,winners:&Vec<usize>) -> Vec<Vec<(usize,f32)>>{
+        let mut distances = Vec::new();
+        let count = (winners.iter().count() as f32).sqrt() as usize;
+        let winners = winners.iter().map(|x| *x as f32).collect();
+        let winners = ndarray::Array::from_shape_vec((count,count),winners)
+                    .expect("Can't convert!!:layer3");
+        let img = &CSom::get_conv9(winners);
+        for kernel in img.genrows() {
+            let mut vec = Vec::new();
+            for (i,cell) in self.layer_3.genrows().into_iter().enumerate(){
+                let diff = &cell - &kernel;
+                let dist = &diff
+                    .map(|x|x.powf(2.0))
+                    .scalar_sum()
+                    .sqrt();
+                vec.push((i,*dist));
+            }
+            distances.push(vec);
+        }
+        distances
+    }
+    fn get_winners (distances:Vec<Vec<(usize,f32)>>) -> Vec<usize>{
+        let init = (<usize>::max_value(), (0.0/0.0));
         let winers = distances.iter()
             .map(|x| {
                 x.iter().fold(&init,|m,v| {
@@ -133,14 +174,17 @@ impl CSom {
     fn train (&self, batch_size:usize,train_count: usize, dataset :&DataSet){
         let minibatchs = std::iter::repeat(())
             .map(|_| dataset.take_n_rand(batch_size))
-            .take(train_count);//let minibatch = dataset.take_n_rand(n);
+            .take(train_count);
         for (i,minibatch) in minibatchs.enumerate(){
+            let mut vec = Vec::new();
             for entry in minibatch{
-                let img = self.get_winers(&entry);
-                println!("{}",img.get(1).unwrap());
+                let winl1 = CSom::get_winners(self.get_distances_layer1(&entry));
+                let winl2 = CSom::get_winners(self.get_distances_layer2(&winl1));
+                let winl3 = CSom::get_winners(self.get_distances_layer3(&winl2));
+                vec.push((winl1,winl2,winl3));
             }
         }
-    }
+    }  
 }
 
 fn main() {
