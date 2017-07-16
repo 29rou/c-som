@@ -1,3 +1,4 @@
+extern crate rand;
 extern crate ndarray;
 extern crate ndarray_rand;
 use std;
@@ -5,29 +6,31 @@ use imgdata::ImgData;
 use dataset::DataSet;
 use dataset::DataSetTrait;
 
-type CsomLayer = ndarray::Array2<f32>;
+type CsomLayer<T> = ndarray::Array2<T>;
 
-pub struct CSom {
-    layer_1: CsomLayer,
-    layer_2: CsomLayer,
-    layer_3: CsomLayer,
+pub struct CSom<T> {
+    layer_1: CsomLayer<T>,
+    layer_2: CsomLayer<T>,
+    layer_3: CsomLayer<T>,
 }
 
-impl CSom {
+
+impl <T:From<f32>+PartialOrd+self::rand::distributions::range::SampleRange> CSom <T> {
     pub fn new (kernel:usize) ->Self{
         use self::ndarray::Array;;
         use self::ndarray_rand::RandomExt;
-        use rand::distributions::Range;
-        let r_dist:Range<f32> = Range::new(0.0, 255.0);
+        use self::rand::distributions::Range;
+        let zero:T = (0.0).into();
+        let max:T = (255.0).into();
+        let r_dist:Range<T> = Range::new(zero, max);
         CSom{
             layer_1: Array::random((kernel,kernel),r_dist),
             layer_2: Array::random((kernel,kernel),r_dist),
             layer_3: Array::random((kernel*10,kernel as usize),r_dist)
         }
     }
-    
-    fn get_conv9(image:CsomLayer) -> CsomLayer{
-        let mut vec:Vec<f32> = Vec::new();
+    fn get_conv9(image:CsomLayer<T>) -> CsomLayer<T>{
+        let mut vec:Vec<T> = Vec::new();
         let count = image.windows((3,3)).into_iter().count();
         for kernel in image.windows((3,3)){
             for entry in &kernel{
@@ -37,7 +40,7 @@ impl CSom {
         ndarray::Array::from_shape_vec((count,9),vec).unwrap()
     }
 
-    fn get_distances_layer1(&self,imgdata:&ImgData) -> Vec<Vec<(usize,f32)>>{
+    fn get_distances_layer1(&self,imgdata:&ImgData) -> Vec<Vec<(usize,T)>>{
         let mut distances = Vec::new();
         let img = &CSom::get_conv9(imgdata.load_img(32));
         for kernel in img.genrows(){
@@ -54,7 +57,7 @@ impl CSom {
         }
         distances
     }
-    fn get_distances_layer2(&self,winners:&Vec<usize>) -> Vec<Vec<(usize,f32)>>{
+    fn get_distances_layer2(&self,winners:&Vec<usize>) -> Vec<Vec<(usize,T)>>{
         let mut distances = Vec::new();
         let count = (winners.iter().count() as f32).sqrt() as usize;
         let winners = winners.iter().map(|x| *x as f32).collect();
@@ -75,7 +78,7 @@ impl CSom {
         }
         distances
     }
-    fn get_distances_layer3(&self,winners:&Vec<usize>) -> Vec<Vec<(usize,f32)>>{
+    fn get_distances_layer3(&self,winners:&Vec<usize>) -> Vec<Vec<(usize,T)>>{
         let mut distances = Vec::new();
         let count = (winners.iter().count() as f32).sqrt() as usize;
         let winners = winners.iter().map(|x| *x as f32).collect();

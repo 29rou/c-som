@@ -1,3 +1,4 @@
+extern crate rand;
 use imgdata::ImgData;
 use MiniBatch;
 
