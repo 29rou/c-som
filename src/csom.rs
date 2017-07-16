@@ -8,9 +8,28 @@ use dataset::DataSet;
 use dataset::DataSetTrait;
 
 use self::generic_array::{ArrayLength,GenericArray};
+use self::rand::{Rng,thread_rng};
+use self::rand::distributions::range::SampleRange;
 
 type CsomLayer<T,Size> 
     = GenericArray<T,Size>;
+
+trait CsomLayerTrait{
+    fn new(mut rng:&rand::ThreadRng)->Self;
+}
+
+impl<T:From<f64>+PartialOrd+SampleRange,Size:ArrayLength<T>> CsomLayerTrait for CsomLayer<T,Size>{
+    fn new(mut rng:&rand::ThreadRng)->Self{
+        let csomlayer:CsomLayer<T,Size>;
+        for i in csomlayer.iter(){
+            *i = rng.gen_range(
+                (0.0).into(),
+                (255.0).into()
+            )
+        }
+        csomlayer
+    }
+}
 
 pub struct CSom<T: Sized,N:ArrayLength<T>,M:ArrayLength<T>> {
     layer_1: CsomLayer<T,N>,
@@ -19,18 +38,13 @@ pub struct CSom<T: Sized,N:ArrayLength<T>,M:ArrayLength<T>> {
 }
 
 
-impl <T,N:ArrayLength<T>,M:ArrayLength<T>> CSom <T,N,M> {
+impl <T:From<f64>+PartialOrd+SampleRange, N:ArrayLength<T>,M:ArrayLength<T>> CSom <T,N,M> {
     pub fn new (kernel:usize) ->Self{
-        use self::ndarray::Array;;
-        use self::ndarray_rand::RandomExt;
-        use self::rand::distributions::Range;
-        let zero:T = (0.0).into();
-        let max:T = (255.0).into();
-        let r_dist:Range<T> = Range::new(zero, max);
+        let mut rng = &thread_rng();
         CSom{
-            layer_1: Array::random((kernel,kernel),r_dist),
-            layer_2: Array::random((kernel,kernel),r_dist),
-            layer_3: Array::random((kernel*10,kernel as usize),r_dist)
+           layer_1: CsomLayerTrait::new(rng),
+           layer_2: CsomLayerTrait::new(rng),
+           layer_3: CsomLayerTrait::new(rng) 
         }
     }
     fn get_conv9<Size:ArrayLength<T>>
