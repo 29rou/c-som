@@ -1,21 +1,25 @@
 extern crate rand;
 extern crate ndarray;
 extern crate ndarray_rand;
+extern crate generic_array;
 use std;
 use imgdata::ImgData;
 use dataset::DataSet;
 use dataset::DataSetTrait;
 
-type CsomLayer<T> = ndarray::Array2<T>;
+use self::generic_array::{ArrayLength,GenericArray};
 
-pub struct CSom<T> {
-    layer_1: CsomLayer<T>,
-    layer_2: CsomLayer<T>,
-    layer_3: CsomLayer<T>,
+type CsomLayer<T,Size> 
+    = GenericArray<T,Size>;
+
+pub struct CSom<T: Sized,N:ArrayLength<T>,M:ArrayLength<T>> {
+    layer_1: CsomLayer<T,N>,
+    layer_2: CsomLayer<T,N>,
+    layer_3: CsomLayer<T,M>,
 }
 
 
-impl <T:From<f32>+PartialOrd+self::rand::distributions::range::SampleRange> CSom <T> {
+impl <T,N:ArrayLength<T>,M:ArrayLength<T>> CSom <T,N,M> {
     pub fn new (kernel:usize) ->Self{
         use self::ndarray::Array;;
         use self::ndarray_rand::RandomExt;
@@ -29,12 +33,13 @@ impl <T:From<f32>+PartialOrd+self::rand::distributions::range::SampleRange> CSom
             layer_3: Array::random((kernel*10,kernel as usize),r_dist)
         }
     }
-    fn get_conv9(image:CsomLayer<T>) -> CsomLayer<T>{
+    fn get_conv9<Size:ArrayLength<T>>
+    (image:CsomLayer<T,Size>) -> CsomLayer<T,Size>{
         let mut vec:Vec<T> = Vec::new();
         let count = image.windows((3,3)).into_iter().count();
         for kernel in image.windows((3,3)){
             for entry in &kernel{
-                vec.push(*entry);
+                vec.push((*entry).into());
             }
         }
         ndarray::Array::from_shape_vec((count,9),vec).unwrap()

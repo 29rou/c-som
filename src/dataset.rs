@@ -20,7 +20,7 @@ impl DataSetTrait for DataSet{
             .collect::<DataSet>()
     } 
     fn take_n_rand  (&self,n: usize)->MiniBatch{
-        use rand::{thread_rng, Rng};
+        use self::rand::{thread_rng, Rng};
         let mut rng = thread_rng();
         let mut v :MiniBatch = Vec::new();
         v.reserve(n as usize);

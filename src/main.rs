@@ -1,4 +1,3 @@
-extern crate rand;
 
 mod imgdata;
 use imgdata::ImgData;
