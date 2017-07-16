@@ -1,12 +1,14 @@
 extern crate rand;
+extern crate generic_array;
 use imgdata::ImgData;
 use MiniBatch;
+use self::generic_array::{ArrayLength,GenericArray};
 
 pub type DataSet  = Vec<ImgData>;
 
 pub trait DataSetTrait {
     fn new(p:&str)->Self;
-    fn take_n_rand(&self, n:usize)->MiniBatch;
+    fn take_n_rand(&self)->MiniBatch;
 }
 
 impl DataSetTrait for DataSet{
@@ -19,15 +21,16 @@ impl DataSetTrait for DataSet{
             .map(|x| { ImgData::new(x)})
             .collect::<DataSet>()
     } 
-    fn take_n_rand  (&self,n: usize)->MiniBatch{
+    fn take_n_rand (&self)->MiniBatch{
         use self::rand::{thread_rng, Rng};
         let mut rng = thread_rng();
-        let mut v :MiniBatch = Vec::new();
-        v.reserve(n as usize);
-        for _ in 0..n{
-            let r= rng.choose(&self).unwrap();
-            v.push(r);
+        unsafe{
+            use std;
+            let mut minibatch:MiniBatch = std::mem::uninitialized();
+            for i in minibatch.as_mut(){
+                *i = rng.choose(&self).unwrap();
+            }
+            minibatch
         }
-        v
     }
 }

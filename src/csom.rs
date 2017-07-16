@@ -11,48 +11,50 @@ use self::generic_array::{ArrayLength,GenericArray};
 use self::rand::{Rng,thread_rng};
 use self::rand::distributions::range::SampleRange;
 
-type CsomLayer<T,D,S> 
-    = GenericArray<GenericArray<T,D>,S>;
+type CsomLayer<T,K,S> 
+    = GenericArray<GenericArray<T,K>,S>;
 
 trait CsomLayerTrait{
     fn new(rng:&mut rand::ThreadRng)->Self;
 }
 
-impl<T,D,S> CsomLayerTrait for CsomLayer<T,D,S>
-where T:From<f32>+PartialOrd+SampleRange,
-      D:ArrayLength<T>,
-      S:ArrayLength<GenericArray<T,D>>
+impl<T,K,S> CsomLayerTrait for CsomLayer<T,K,S> 
+ where T:From<f32>+PartialOrd+SampleRange,
+       K:ArrayLength<T>,
+       S:ArrayLength<GenericArray<T,K>>
  {
     fn new(rng:&mut rand::ThreadRng)->Self{
-        let mut init_inner = |x:&mut GenericArray<T,D>|{
-            for j in x.as_mut(){
-                *j =  rng.gen_range((0.0).into(),(255.0).into());
-            }
-        };
+        let mut csomlayer:CsomLayer<T,K,S>;
         unsafe{
-            let mut csomlayer:CsomLayer<T,D,S> = std::mem::uninitialized();
+            csomlayer = std::mem::uninitialized();
             for i in csomlayer.as_mut(){
-                init_inner(i);
+                for j in i.as_mut(){
+                    *j =  rng.gen_range((0.0).into(),(255.0).into());
+                }
             }
             csomlayer
         }
     }
 }
 
-pub struct CSom<T,D,N,M> 
+pub struct CSom<T,K,N,M> 
 where T:Sized,
-      D:ArrayLength<T>, 
-      N:ArrayLength<GenericArray<T,D>>,
-      M:ArrayLength<GenericArray<T,D>>
+      K:ArrayLength<T>, 
+      N:ArrayLength<GenericArray<T,K>>,
+      M:ArrayLength<GenericArray<T,K>>
 {
-    pub layer_1: CsomLayer<T,D,N>,
-    layer_2: CsomLayer<T,D,N>,
-    layer_3: CsomLayer<T,D,M>,
+    pub layer_1: CsomLayer<T,K,N>,
+    layer_2: CsomLayer<T,K,N>,
+    layer_3: CsomLayer<T,K,M>,
 }
 
 
-impl <T:From<f32>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<GenericArray<T,D>>,M:ArrayLength<GenericArray<T,D>>>
- CSom <T,D,N,M> {
+impl <T,K,N,M>
+ CSom <T,K,N,M>
+ where  T:From<f32>+PartialOrd+SampleRange,K:ArrayLength<T>, 
+        N:ArrayLength<GenericArray<T,K>>,
+        M:ArrayLength<GenericArray<T,K>>
+ {
     pub fn new () ->Self{
         let rng = &mut thread_rng();
         CSom{
@@ -61,7 +63,7 @@ impl <T:From<f32>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<Generic
            layer_3: CsomLayerTrait::new(rng) 
         }
     }
-    /*fn get_conv9<Size:ArrayLength<T>>
+    fn get_conv9<Size:ArrayLength<T>>
     (image:CsomLayer<T,Size>) -> CsomLayer<T,Size>{
         let mut vec:Vec<T> = Vec::new();
         let count = image.windows((3,3)).into_iter().count();
@@ -75,7 +77,7 @@ impl <T:From<f32>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<Generic
 
     fn get_distances_layer1(&self,imgdata:&ImgData) -> Vec<Vec<(usize,T)>>{
         let mut distances = Vec::new();
-        let img = &CSom::get_conv9(imgdata.load_img(32));
+        let img = &CSom::get_conv9(imgdata.load_img());
         for kernel in img.genrows(){
             let mut vec = Vec::new();
             for (i,cell) in self.layer_1.genrows().into_iter().enumerate(){
@@ -149,7 +151,7 @@ impl <T:From<f32>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<Generic
 
     pub fn train (&self, batch_size:usize,train_count: usize, dataset :&DataSet){
         let minibatchs = std::iter::repeat(())
-            .map(|_| dataset.take_n_rand(batch_size))
+            .map(|_| dataset.take_n_rand())
             .take(train_count);
         for (i,minibatch) in minibatchs.enumerate(){
             let mut vec = Vec::new();
@@ -160,5 +162,5 @@ impl <T:From<f32>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<Generic
                 vec.push((winl1,winl2,winl3));
             }
         }
-    }  */
+    }  
 }
