@@ -5,10 +5,12 @@ use imgdata::ImgData;
 use dataset::DataSet;
 use dataset::DataSetTrait;
 
+type CsomLayer = ndarray::Array2<f32>;
+
 pub struct CSom {
-    layer_1: ndarray::Array2<f32>,
-    layer_2: ndarray::Array2<f32>,
-    layer_3: ndarray::Array2<f32>,
+    layer_1: CsomLayer,
+    layer_2: CsomLayer,
+    layer_3: CsomLayer,
 }
 
 impl CSom {
@@ -24,7 +26,7 @@ impl CSom {
         }
     }
     
-    fn get_conv9(image:ndarray::Array2<f32>) -> ndarray::Array2<f32>{
+    fn get_conv9(image:CsomLayer) -> CsomLayer{
         let mut vec:Vec<f32> = Vec::new();
         let count = image.windows((3,3)).into_iter().count();
         for kernel in image.windows((3,3)){
