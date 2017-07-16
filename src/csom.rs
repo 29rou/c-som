@@ -15,43 +15,53 @@ type CsomLayer<T,D,S>
     = GenericArray<GenericArray<T,D>,S>;
 
 trait CsomLayerTrait{
-    fn new(mut rng:&rand::ThreadRng)->Self;
+    fn new(rng:&mut rand::ThreadRng)->Self;
 }
 
-impl<T:From<f64>+PartialOrd+SampleRange,D:ArrayLength<T>,S:ArrayLength<GenericArray<T,D>>>
- CsomLayerTrait for CsomLayer<T,D,S>{
-    fn new(mut rng:&rand::ThreadRng)->Self{
-        let csomlayer:CsomLayer<T,D,S>;
-        for i in csomlayer.iter(){
-            for j in i.iter(){
-                *j = rng.gen_range(
-                    (0.0).into(),
-                    (255.0).into()
-                )
+impl<T,D,S> CsomLayerTrait for CsomLayer<T,D,S>
+where T:From<f32>+PartialOrd+SampleRange,
+      D:ArrayLength<T>,
+      S:ArrayLength<GenericArray<T,D>>
+ {
+    fn new(rng:&mut rand::ThreadRng)->Self{
+        let mut init_inner = |x:&mut GenericArray<T,D>|{
+            for j in x.as_mut(){
+                *j =  rng.gen_range((0.0).into(),(255.0).into());
             }
+        };
+        unsafe{
+            let mut csomlayer:CsomLayer<T,D,S> = std::mem::uninitialized();
+            for i in csomlayer.as_mut(){
+                init_inner(i);
+            }
+            csomlayer
         }
-        csomlayer
     }
 }
 
-pub struct CSom<T,D:ArrayLength<T>, N:ArrayLength<GenericArray<T,D>>,M:ArrayLength<GenericArray<T,D>>> {
-    layer_1: CsomLayer<T,D,N>,
+pub struct CSom<T,D,N,M> 
+where T:Sized,
+      D:ArrayLength<T>, 
+      N:ArrayLength<GenericArray<T,D>>,
+      M:ArrayLength<GenericArray<T,D>>
+{
+    pub layer_1: CsomLayer<T,D,N>,
     layer_2: CsomLayer<T,D,N>,
     layer_3: CsomLayer<T,D,M>,
 }
 
 
-impl <T:From<f64>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<GenericArray<T,D>>,M:ArrayLength<GenericArray<T,D>>>
+impl <T:From<f32>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<GenericArray<T,D>>,M:ArrayLength<GenericArray<T,D>>>
  CSom <T,D,N,M> {
-    pub fn new (kernel:usize) ->Self{
-        let mut rng = &thread_rng();
+    pub fn new () ->Self{
+        let rng = &mut thread_rng();
         CSom{
            layer_1: CsomLayerTrait::new(rng),
            layer_2: CsomLayerTrait::new(rng),
            layer_3: CsomLayerTrait::new(rng) 
         }
     }
-    fn get_conv9<Size:ArrayLength<T>>
+    /*fn get_conv9<Size:ArrayLength<T>>
     (image:CsomLayer<T,Size>) -> CsomLayer<T,Size>{
         let mut vec:Vec<T> = Vec::new();
         let count = image.windows((3,3)).into_iter().count();
@@ -150,5 +160,5 @@ impl <T:From<f64>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<Generic
                 vec.push((winl1,winl2,winl3));
             }
         }
-    }  
+    }  */
 }
