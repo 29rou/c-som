@@ -11,34 +11,38 @@ use self::generic_array::{ArrayLength,GenericArray};
 use self::rand::{Rng,thread_rng};
 use self::rand::distributions::range::SampleRange;
 
-type CsomLayer<T,Size> 
-    = GenericArray<T,Size>;
+type CsomLayer<T,D,S> 
+    = GenericArray<GenericArray<T,D>,S>;
 
 trait CsomLayerTrait{
     fn new(mut rng:&rand::ThreadRng)->Self;
 }
 
-impl<T:From<f64>+PartialOrd+SampleRange,Size:ArrayLength<T>> CsomLayerTrait for CsomLayer<T,Size>{
+impl<T:From<f64>+PartialOrd+SampleRange,D:ArrayLength<T>,S:ArrayLength<GenericArray<T,D>>>
+ CsomLayerTrait for CsomLayer<T,D,S>{
     fn new(mut rng:&rand::ThreadRng)->Self{
-        let csomlayer:CsomLayer<T,Size>;
+        let csomlayer:CsomLayer<T,D,S>;
         for i in csomlayer.iter(){
-            *i = rng.gen_range(
-                (0.0).into(),
-                (255.0).into()
-            )
+            for j in i.iter(){
+                *j = rng.gen_range(
+                    (0.0).into(),
+                    (255.0).into()
+                )
+            }
         }
         csomlayer
     }
 }
 
-pub struct CSom<T: Sized,N:ArrayLength<T>,M:ArrayLength<T>> {
-    layer_1: CsomLayer<T,N>,
-    layer_2: CsomLayer<T,N>,
-    layer_3: CsomLayer<T,M>,
+pub struct CSom<T,D:ArrayLength<T>, N:ArrayLength<GenericArray<T,D>>,M:ArrayLength<GenericArray<T,D>>> {
+    layer_1: CsomLayer<T,D,N>,
+    layer_2: CsomLayer<T,D,N>,
+    layer_3: CsomLayer<T,D,M>,
 }
 
 
-impl <T:From<f64>+PartialOrd+SampleRange, N:ArrayLength<T>,M:ArrayLength<T>> CSom <T,N,M> {
+impl <T:From<f64>+PartialOrd+SampleRange,D:ArrayLength<T>, N:ArrayLength<GenericArray<T,D>>,M:ArrayLength<GenericArray<T,D>>>
+ CSom <T,D,N,M> {
     pub fn new (kernel:usize) ->Self{
         let mut rng = &thread_rng();
         CSom{
