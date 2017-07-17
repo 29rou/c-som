@@ -63,7 +63,7 @@ impl <T,K,N,M>
            layer_3: CsomLayerTrait::new(rng) 
         }
     }
-    fn get_conv9<Size:ArrayLength<T>>
+    /*fn get_conv9<Size:ArrayLength<T>>
     (image:CsomLayer<T,Size>) -> CsomLayer<T,Size>{
         let mut vec:Vec<T> = Vec::new();
         let count = image.windows((3,3)).into_iter().count();
@@ -162,5 +162,5 @@ impl <T,K,N,M>
                 vec.push((winl1,winl2,winl3));
             }
         }
-    }  
+    }  */
 }

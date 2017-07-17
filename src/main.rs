@@ -5,13 +5,14 @@ use imgdata::ImgData;
 
 mod csom;
 mod dataset;
-use generic_array::{GenericArray,ArrayLength,typenum};
-type MiniBatch<'a> = GenericArray<&'a ImgData,typenum::U100>;
 
+use generic_array::{GenericArray,ArrayLength,typenum};
+use typenum::{U9,U32,U100};
+type MiniBatch<'a,T,R,C> = GenericArray<&'a ImgData<T,R,C>,U100>;
 fn main() {
-    let path = "/home/yoshiki/Downloads/101_ObjectCategories";
-    let dataset:dataset::DataSet = dataset::DataSetTrait::new(path);
-    use typenum::U9;
+    use dataset::{DataSet,DataSetTrait};
+    const PATH:&str = "/home/yoshiki/Downloads/101_ObjectCategories";
+    let dataset:DataSet<f32,U32,U32> = DataSetTrait::new(PATH);
     let csom:csom::CSom<f32,U9,U9,U9> = csom::CSom::new();
     for i in csom.layer_1{
         for j in i{
@@ -27,5 +28,5 @@ fn main() {
     let mut w = w.into_iter();
     let w = w.next().unwrap();
     println!("{}",w);*/
-    csom.train(10,100,&dataset);
+    //csom.train(10,100,&dataset);
 }
