@@ -1,5 +1,5 @@
 extern crate generic_array;
-#[macro_use]extern crate typenum;
+extern crate typenum;
 mod imgdata;
 use imgdata::ImgData;
 
