@@ -27,12 +27,12 @@ where   T:From<u8>,
             .into_iter()
             .map(|x| x.unwrap().path().to_path_buf())
             .filter(|x| x.is_file())
-            .map(|x| { ImgData::new(x)})
+            .map(|x| ImgData::new(x))
             .collect::<DataSet<T,R,C>>()
     } 
     fn get_minibatch (&self)->MiniBatch<T,R,C>{
         use self::rand::{thread_rng, Rng};
-        let mut rng = thread_rng();
+        let rng = &mut thread_rng();
         let mut minibatch:MiniBatch<T,R,C>;
         unsafe{
             use std;
@@ -40,7 +40,7 @@ where   T:From<u8>,
             for i in minibatch.as_mut(){
                 *i = rng.choose(&self).unwrap();
             }
-            minibatch
         }
+        minibatch
     }
 }

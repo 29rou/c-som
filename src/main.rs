@@ -7,16 +7,19 @@ mod csom;
 mod dataset;
 
 use generic_array::{GenericArray,ArrayLength,typenum};
-use typenum::{U9,U32,U100};
+use typenum::{U0,U1,U2,U9,U32,U100};
 type MiniBatch<'a,T,R,C> = GenericArray<&'a ImgData<T,R,C>,U100>;
+
 fn main() {
     use dataset::{DataSet,DataSetTrait};
     const PATH:&str = "/home/yoshiki/Downloads/101_ObjectCategories";
     let dataset:DataSet<f32,U32,U32> = DataSetTrait::new(PATH);
-    let csom:csom::CSom<f32,U9,U9,U9> = csom::CSom::new();
-    for i in csom.layer_1{
+    let csom:csom::CSom<f32,U9,U2,U9,U9> = csom::CSom::new();
+    for i in csom.mid_layers{
         for j in i{
-            println!("{}",j);
+            for k in j{
+                println!("{}",k);
+            }
         }
     }
     /*let img = &dataset.get(4).unwrap().load_img(32);

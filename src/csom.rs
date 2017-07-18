@@ -32,35 +32,40 @@ impl<T,K,S> CsomLayerTrait for CsomLayer<T,K,S>
                     *j =  rng.gen_range((0.0).into(),(255.0).into());
                 }
             }
-            csomlayer
         }
+        csomlayer
     }
 }
 
-pub struct CSom<T,K,N,M> 
+pub struct CSom<T,K,L,N,M> 
 where T:Sized,
       K:ArrayLength<T>, 
+      L:ArrayLength<CsomLayer<T,K,N>>,
       N:ArrayLength<GenericArray<T,K>>,
       M:ArrayLength<GenericArray<T,K>>
 {
-    pub layer_1: CsomLayer<T,K,N>,
-    layer_2: CsomLayer<T,K,N>,
-    layer_3: CsomLayer<T,K,M>,
+    pub mid_layers: GenericArray<CsomLayer<T,K,N>,L>,
+    final_layer: CsomLayer<T,K,M>,
 }
 
 
-impl <T,K,N,M>
- CSom <T,K,N,M>
+impl <T,K,L,N,M> CSom <T,K,L,N,M>
  where  T:From<f32>+PartialOrd+SampleRange,K:ArrayLength<T>, 
+        L:ArrayLength<CsomLayer<T,K,N>>,
         N:ArrayLength<GenericArray<T,K>>,
         M:ArrayLength<GenericArray<T,K>>
  {
     pub fn new () ->Self{
         let rng = &mut thread_rng();
-        CSom{
-           layer_1: CsomLayerTrait::new(rng),
-           layer_2: CsomLayerTrait::new(rng),
-           layer_3: CsomLayerTrait::new(rng) 
+        let mut csom:CSom<T,K,L,N,M>;
+        unsafe{
+            use std;
+            csom = std::mem::uninitialized();
+            for i in csom.mid_layers.as_mut(){
+                *i = CsomLayerTrait::new(rng);
+            }
+            csom.final_layer = CsomLayerTrait::new(rng);
+            csom
         }
     }
     /*fn get_conv9<Size:ArrayLength<T>>

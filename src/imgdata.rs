@@ -36,20 +36,19 @@ where   T:From<u8>,
         let mut img_array:Image<T,R,C>;
         unsafe{
             img_array = std::mem::uninitialized();
-            let size = img_array.iter().count();
             let img = image::imageops::resize(
                 img,
-                size as u32,
-                size as u32,
+                C::to_u32(), 
+                R::to_u32(),
                 image::FilterType::Triangle
             );
-            for i in 0..size{
-                for j in 0..size{
-                    let iter = i*size+j;
+            for i in 0..R::to_usize(){
+                for j in 0..C::to_usize(){
+                    let iter = i * R::to_usize() + j;
                     img_array[i][j] = (*img.get(iter).unwrap()).into();
                 }
             }
-            img_array
         }
+        img_array
     }
 }
