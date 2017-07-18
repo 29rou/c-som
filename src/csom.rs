@@ -152,12 +152,17 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
             });
         winers.collect()
     }
-
-    pub fn train (&self, batch_size:usize,train_count: usize, dataset :&DataSet){
+    */
+    pub fn train<R,C,X> (&self, batch_size:usize,train_count: usize, dataset :X)
+    where   T:From<u8>,
+            R:ArrayLength<GenericArray<T,C>>,
+            C:ArrayLength<T>,
+            X:DataSetTrait<T,R,C>
+    {
         let minibatchs = std::iter::repeat(())
-            .map(|_| dataset.take_n_rand())
+            .map(|_| dataset.get_minibatch(10))
             .take(train_count);
-        for (i,minibatch) in minibatchs.enumerate(){
+        /*for (i,minibatch) in minibatchs.enumerate(){
             let mut vec = Vec::new();
             for entry in minibatch{
                 let winl1 = CSom::get_winners(self.get_distances_layer1(&entry));
@@ -165,6 +170,6 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
                 let winl3 = CSom::get_winners(self.get_distances_layer3(&winl2));
                 vec.push((winl1,winl2,winl3));
             }
-        }
-    }  */
+        }*/
+    }  
 }

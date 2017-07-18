@@ -6,7 +6,7 @@ use imgdata::ImgData;
 use MiniBatch;
 use self::generic_array::{ArrayLength,GenericArray};
 
-pub type DataSet<T,R,C>  = Vec<ImgData<T,R,C>>;
+pub type DataSet<T,R,C>  = std::vec::Vec<ImgData<T,R,C>>;
 
 pub trait DataSetTrait <T,R,C>
 where   T:From<u8>,
@@ -14,7 +14,7 @@ where   T:From<u8>,
         C:ArrayLength<T>
 {
     fn new(p:&str)->Self;
-    fn get_minibatch(&self)->MiniBatch<T,R,C>;
+    fn get_minibatch(&self,n:usize)->MiniBatch<T,R,C>;
 }
 
 impl <T,R,C> DataSetTrait<T,R,C> for DataSet<T,R,C>
@@ -40,17 +40,11 @@ where   T:From<u8>+'static,
             .map(|x| ImgData::new(x))
             .collect::<DataSet<T,R,C>>()*/
     } 
-    fn get_minibatch (&self)->MiniBatch<T,R,C>{
-        use self::rand::{thread_rng, Rng};
-        let rng = &mut thread_rng();
-        let mut minibatch:MiniBatch<T,R,C>;
-        unsafe{
-            use std;
-            minibatch = std::mem::uninitialized();
-            for i in minibatch.as_mut(){
-                *i = rng.choose(&self).unwrap();
-            }
-        }
-        minibatch
+    fn get_minibatch (&self,n:usize)->MiniBatch<T,R,C>{
+        use self::rand::Rng;
+        let rng = &mut rand::thread_rng();
+        (1..n)
+            .filter_map(|_| rng.choose(&self))
+            .collect()
     }
 }

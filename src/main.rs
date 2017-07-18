@@ -9,7 +9,7 @@ mod dataset;
 
 use generic_array::{GenericArray,ArrayLength};
 use typenum::{U0,U1,U2,U3,U9,U32,U100,consts};
-type MiniBatch<'a,T,R,C> = GenericArray<&'a ImgData<T,R,C>,U100>;
+type MiniBatch<'a,T,R,C> = Vec<&'a ImgData<T,R,C>>;
 
 fn main() {
     use dataset::{DataSet,DataSetTrait};
