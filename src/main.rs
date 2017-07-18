@@ -1,27 +1,28 @@
 extern crate generic_array;
-
+#[macro_use]extern crate typenum;
 mod imgdata;
 use imgdata::ImgData;
 
 mod csom;
 mod dataset;
 
-use generic_array::{GenericArray,ArrayLength,typenum};
-use typenum::{U0,U1,U2,U9,U32,U100};
+
+use generic_array::{GenericArray,ArrayLength};
+use typenum::{U0,U1,U2,U3,U9,U32,U100,consts};
 type MiniBatch<'a,T,R,C> = GenericArray<&'a ImgData<T,R,C>,U100>;
 
 fn main() {
     use dataset::{DataSet,DataSetTrait};
     const PATH:&str = "/home/yoshiki/Downloads/101_ObjectCategories";
     let dataset:DataSet<f32,U32,U32> = DataSetTrait::new(PATH);
-    let csom:csom::CSom<f32,U9,U2,U9,U9> = csom::CSom::new();
+    /*let csom:csom::CSom<f32,U9,U2,U9,U9> = csom::CSom::new();
     for i in csom.mid_layers{
         for j in i{
             for k in j{
                 println!("{}",k);
             }
         }
-    }
+    }*/
     /*let img = &dataset.get(4).unwrap().load_img(32);
     let a = img.subview(ndarray::Axis(0),0);
     let b = img.subview(ndarray::Axis(0),1);

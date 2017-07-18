@@ -1,6 +1,5 @@
 extern crate rand;
-extern crate ndarray;
-extern crate ndarray_rand;
+extern crate typenum;
 extern crate generic_array;
 use std;
 use imgdata::ImgData;

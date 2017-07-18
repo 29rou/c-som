@@ -7,6 +7,7 @@ dependencies = [
  "ndarray 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ndarray-rand 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "typenum 1.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "walkdir 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
