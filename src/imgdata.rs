@@ -1,7 +1,7 @@
 extern crate image;
 extern crate generic_array;
 use std;
-use generic_array::{GenericArray,ArrayLength};
+use self::generic_array::{GenericArray,ArrayLength};
 
 pub type Image<T,R,C> = GenericArray<GenericArray<T,C>,R>;
 

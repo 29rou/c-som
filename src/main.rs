@@ -1,14 +1,10 @@
-extern crate generic_array;
 extern crate typenum;
 mod imgdata;
-
 mod csom;
 mod dataset;
 
 use typenum::*;
 
-use generic_array::{GenericArray,ArrayLength};
-use typenum::{U0,U1,U2,U3,U9,U32,U100,consts};
 
 fn main() {
     use dataset::{DataSet,DataSetTrait};

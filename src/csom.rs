@@ -11,8 +11,6 @@ use self::typenum::*;
 use self::rand::{Rng,thread_rng};
 use self::rand::distributions::range::SampleRange;
 
-type MiniBatch<'a> = Vec<&'a ImgData>;
-
 type CsomLayer<T,K,S> 
     = GenericArray<GenericArray<T,K>,S>;
 
