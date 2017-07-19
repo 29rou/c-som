@@ -7,6 +7,8 @@ use typenum::*;
 
 
 fn main() {
+    let builder = std::thread::Builder::new();
+    let th = builder.stack_size(10000000);
     use dataset::{DataSet,DataSetTrait};
     const PATH:&str = "/home/yoshiki/Downloads/101_ObjectCategories";
     let dataset:DataSet = DataSetTrait::new(PATH);
