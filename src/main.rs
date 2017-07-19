@@ -1,22 +1,18 @@
 extern crate generic_array;
-#[macro_use]extern crate typenum;
+extern crate typenum;
 mod imgdata;
-use imgdata::ImgData;
 
 mod csom;
 mod dataset;
 
+use typenum::*;
 
-use generic_array::{GenericArray,ArrayLength};
-use typenum::{U0,U1,U2,U3,U9,U32,U100,consts};
-type MiniBatch<'a,T,R,C> = Vec<&'a ImgData<T,R,C>>;
-
-fn main() {
+fn main() where {
     use dataset::{DataSet,DataSetTrait};
     const PATH:&str = "/home/yoshiki/Downloads/101_ObjectCategories";
     let dataset:DataSet<f32,U32,U32> = DataSetTrait::new(PATH);
-    /*let csom:csom::CSom<f32,U9,U2,U9,U9> = csom::CSom::new();
-    for i in csom.mid_layers{
+    let csom:csom::CSom<f32,U9,U2,U9,U9> = csom::CSom::new();
+    /*for i in csom.mid_layers{
         for j in i{
             for k in j{
                 println!("{}",k);
@@ -32,5 +28,5 @@ fn main() {
     let mut w = w.into_iter();
     let w = w.next().unwrap();
     println!("{}",w);*/
-    //csom.train(10,100,&dataset);
+    csom.train(10,100,&dataset);
 }

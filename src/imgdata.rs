@@ -11,9 +11,9 @@ where   T:From<u8>,
         R:ArrayLength<GenericArray<T,C>>,
         C:ArrayLength<T>
 {
-    path: std::path::PathBuf,
-    class: String,
-    image: Image<T,R,C>,
+    //path: std::path::PathBuf,
+    pub class: String,
+    pub image: Image<T,R,C>,
 }
 
 impl  <T,R,C>ImgData <T,R,C>
@@ -26,7 +26,8 @@ where   T:From<u8>,
             .iter().last().unwrap()
             .to_str().unwrap().to_string();
         let img = ImgData::load_img(&path);
-         ImgData{path: path, class: c,image:img}
+        //ImgData{path: path, class: c,image:img}
+        ImgData{class: c,image:img}
     }
     pub fn load_img(path:&std::path::PathBuf) -> Image<T,R,C>
     {

@@ -3,9 +3,9 @@ extern crate walkdir;
 extern crate generic_array;
 use std;
 use imgdata::ImgData;
-use MiniBatch;
 use self::generic_array::{ArrayLength,GenericArray};
 
+type MiniBatch<'a,T,R,C> = Vec<&'a ImgData<T,R,C>>;
 pub type DataSet<T,R,C>  = std::vec::Vec<ImgData<T,R,C>>;
 
 pub trait DataSetTrait <T,R,C>
@@ -33,12 +33,6 @@ where   T:From<u8>+'static,
             .map(|x| thread::spawn(||ImgData::new(x)))
             .map(|x| x.join().expect("Thread Error!"))
             .collect::<DataSet<T,R,C>>()
-        /*WalkDir::new(p)
-            .into_iter()
-            .map(|x| x.unwrap().path().to_path_buf())
-            .filter(|x| x.is_file())
-            .map(|x| ImgData::new(x))
-            .collect::<DataSet<T,R,C>>()*/
     } 
     fn get_minibatch (&self,n:usize)->MiniBatch<T,R,C>{
         use self::rand::Rng;
