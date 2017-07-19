@@ -5,7 +5,6 @@ use std;
 use imgdata::Image;
 use imgdata::ImgData;
 use dataset::DataSet;
-use dataset::DataSetTrait;
 
 use self::generic_array::{ArrayLength,GenericArray};
 use self::typenum::*;
@@ -21,41 +20,6 @@ trait CsomLayerTrait{
     fn new(rng:&mut rand::ThreadRng)->Self;
 }
 
-trait GetConvTrait<T,R,C>
-where   T:Clone+From<f32>,
-        R:ArrayLength<GenericArray<T,C>>
-            +ArrayLength<GenericArray<Kernel<T>,C>>,
-        C:ArrayLength<T>+ArrayLength<Kernel<T>>
-{
-    fn get_conv9(image:&Array2D<T,R,C>) -> Array2D<Kernel<T>,R,C>;
-}
-impl <T,R,C>GetConvTrait<T,R,C> for Array2D<T,R,C>
-where   T:Clone+From<f32>,
-        R:ArrayLength<GenericArray<T,C>>
-            +ArrayLength<GenericArray<Kernel<T>,C>>,
-        C:ArrayLength<T>+ArrayLength<Kernel<T>>
-{
-    fn get_conv9(image:&Array2D<T,R,C>) -> Array2D<Kernel<T>,R,C>
-    {
-        let mut result:GenericArray<GenericArray<Kernel<T>,C>,R>;
-        unsafe{
-            result = std::mem::uninitialized();
-            for r in 1..(R::to_usize() - 1){
-                for c in 1..(C::to_usize() - 1){
-                    for r_k in 0..2{
-                        for c_k in 0..2{
-                            let r_k = r_k -1;
-                            let c_k = c_k -1;
-                            result[r][c][c_k+r_k*3] = 
-                                image[r+r_k][c+c_k].clone();
-                        }
-                    }
-                }
-            }
-        }
-        result
-    }
-}
 
 impl<T,K,S> CsomLayerTrait for CsomLayer<T,K,S> 
  where T:From<f32>+PartialOrd+SampleRange,

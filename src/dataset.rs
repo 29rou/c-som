@@ -1,9 +1,6 @@
-extern crate rand;
 extern crate walkdir;
-extern crate generic_array;
 use std;
 use imgdata::ImgData;
-use self::generic_array::{ArrayLength,GenericArray};
 
 pub type DataSet  = std::vec::Vec<ImgData>;
 
