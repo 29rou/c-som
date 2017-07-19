@@ -47,7 +47,6 @@ where T:Sized,
     final_layer: CsomLayer<T,K,M>,
 }
 
-
 impl <T,K,L,N,M> CSom <T,K,L,N,M>
  where  T:From<f32>+PartialOrd+SampleRange,K:ArrayLength<T>, 
         L:ArrayLength<CsomLayer<T,K,N>>,
@@ -153,14 +152,13 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
         winers.collect()
     }
     */
-    pub fn train<R,C,X> (&self, batch_size:usize,train_count: usize, dataset :X)
-    where   T:From<u8>,
-            R:ArrayLength<GenericArray<T,C>>,
-            C:ArrayLength<T>,
-            X:DataSetTrait<T,R,C>
+    pub fn train<R,C> (&self, batch_size:usize,train_count: usize, dataset :&DataSet<T,R,C>)
+    where   T:From<u8>+Clone,
+            R:ArrayLength<GenericArray<T,C>>+Clone,
+            C:ArrayLength<T>+Clone
     {
         let minibatchs = std::iter::repeat(())
-            .map(|_| dataset.get_minibatch(10))
+            .map(|_| take_n_rand(dataset,batch_size))
             .take(train_count);
         /*for (i,minibatch) in minibatchs.enumerate(){
             let mut vec = Vec::new();
@@ -172,4 +170,14 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
             }
         }*/
     }  
+}
+fn take_n_rand<'a,T:Clone> (vec:&'a Vec<T>,n:usize)->Vec<T>
+where 
+{
+    use self::rand::Rng;
+    let rng = &mut rand::thread_rng();
+    (1..n)
+        .filter_map(|_| rng.choose(&vec))
+        .map(|x|x.clone())
+        .collect()
 }

@@ -8,8 +8,9 @@ use self::generic_array::{ArrayLength,GenericArray};
 
 pub type DataSet<T,R,C>  = std::vec::Vec<ImgData<T,R,C>>;
 
+
 pub trait DataSetTrait <T,R,C>
-where   T:From<u8>,
+where   T:From<u8>+Clone,
         R:ArrayLength<GenericArray<T,C>>,
         C:ArrayLength<T>
 {
@@ -18,7 +19,7 @@ where   T:From<u8>,
 }
 
 impl <T,R,C> DataSetTrait<T,R,C> for DataSet<T,R,C>
-where   T:From<u8>+'static,
+where   T:From<u8>+Clone+'static,
         R:ArrayLength<GenericArray<T,C>>+'static,
         C:ArrayLength<T>+'static,
         <R as generic_array::ArrayLength<generic_array::GenericArray<T, C>>>::ArrayType: std::marker::Send

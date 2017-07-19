@@ -5,7 +5,7 @@ use generic_array::{GenericArray,ArrayLength};
 
 type Image<T,R,C> = GenericArray<GenericArray<T,C>,R>;
 
-
+#[derive (Clone)]
 pub struct ImgData<T,R,C>   
 where   T:From<u8>,
         R:ArrayLength<GenericArray<T,C>>,
