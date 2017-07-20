@@ -36,20 +36,10 @@ impl  ImgData{
                 R::to_u32(),
                 image::FilterType::Triangle
             );
-<<<<<<< HEAD
             for (i,row) in img_array.as_mut().into_iter().enumerate(){
                 for (j,pixel) in row.as_mut().into_iter().enumerate(){
                     let index = i * R::to_usize() + j;
                     *pixel = (*img.get(index).unwrap()).into();
-=======
-            {
-                let index = &mut 0;
-                for row in &mut img_array[..]{
-                    for pixel in &mut row[..]{
-                        *pixel = (*img.get(*index).unwrap()).into();
-                        *index += 1; 
-                    }
->>>>>>> master
                 }
             }
         }
