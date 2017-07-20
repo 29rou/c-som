@@ -94,7 +94,7 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
             let minibatch = minibatch
                 .map(|_| rx.recv().expect("Thread Error!"));
                 //.collect::<Vec<Array2D<GenericArray<_,U9>,_,_>>>();
-            for img in minibatch{
+            /*for img in minibatch{
                 for i in img.as_ref().into_iter(){
                     for j in i.as_ref().into_iter(){
                         print!("{:^3}",j.get(4).unwrap());
@@ -102,8 +102,10 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
                     println!("");
                 }
                 println!("\n\n");
-            }
+            }*/
         }
+        let x:Image<f32,U32,U32> = dataset.get(0).unwrap().load_img();
+        print_img_ascii(x);
     }  
 }
 
@@ -141,4 +143,31 @@ where   T:Clone,
         }
     }
     result
+}
+
+fn print_img_ascii<R,C> (array:Image<f32,R,C>)
+where   R:ArrayLength<GenericArray<f32,C>>,
+        C:ArrayLength<f32>
+{
+    for row in &array[..]{
+        for pixel in &row[..]{
+            let c = if *pixel>255.0{
+                "@"
+            }else if *pixel>250.0{
+                "#"
+            }else if *pixel > 200.0{
+                "%"
+            }else if *pixel > 150.0{
+                "?"
+            }else if *pixel > 100.0{
+                "+"
+            }else if *pixel > 50.0{
+                "^"
+            }else{
+                " "
+            };
+            print!("{:^3}",c);
+        }
+        println!("/n");
+    }
 }
