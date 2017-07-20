@@ -30,18 +30,42 @@ impl  ImgData{
         let mut img_array:Image<T,R,C>;
         unsafe{
             img_array = std::mem::uninitialized();
-            let img = image::imageops::resize(
+            let img = &image::imageops::resize(
                 img,
                 C::to_u32(), 
                 R::to_u32(),
                 image::FilterType::Triangle
             );
-            for i in 0..R::to_usize(){
+            for (i,row) in img_array.as_mut().into_iter().enumerate(){
+                let index = i * R::to_usize();
+                for (j,pixel) in row.as_mut().into_iter().enumerate(){
+                    let index = index + j;
+                    *pixel = (*img.get(index).unwrap()).into();
+                }
+            }
+            /*let _ = img_array
+                .as_mut()
+                .into_iter()
+                .enumerate()
+                .map(|(i,row)|{
+                    let r:usize= i*R::to_usize();
+                    row.as_mut()
+                        .into_iter()
+                        .enumerate()
+                        .map(move |(j,pixel)|->u8{
+                            let iter = r + j;
+                            *pixel = (*img.get(iter).unwrap()).into();
+                            1
+                        }
+                        )
+                }
+                );*/
+            /*for i in 0..R::to_usize(){
                 for j in 0..C::to_usize(){
                     let iter = i * R::to_usize() + j;
                     img_array[i][j] = (*img.get(iter).unwrap()).into();
                 }
-            }
+            }*/
         }
         img_array
     }
