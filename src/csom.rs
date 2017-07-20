@@ -94,7 +94,7 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
             let minibatch = minibatch
                 .map(|_| rx.recv().expect("Thread Error!"));
                 //.collect::<Vec<Array2D<GenericArray<_,U9>,_,_>>>();
-            /*for img in minibatch{
+            for img in minibatch{
                 for i in img.as_ref().into_iter(){
                     for j in i.as_ref().into_iter(){
                         print!("{:^3}",j.get(4).unwrap());
@@ -102,7 +102,7 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
                     println!("");
                 }
                 println!("\n\n");
-            }*/
+            }
         }
         let x:Image<f32,U32,U32> = dataset.get(0).unwrap().load_img();
         print_img_ascii(x);
