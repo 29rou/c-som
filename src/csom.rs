@@ -78,21 +78,30 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
             DataSet:std::iter::FromIterator<ImgData>
     {
         let (tx, rx) = std::sync::mpsc::channel();
+        //let (tx2, rx2) = std::sync::mpsc::channel();
         let rng = &mut rand::thread_rng();
         let minibatchs = (0..train_count)
             .map(|_|take_n_rand(dataset,batch_size,rng));
         for (i,minibatch) in minibatchs.enumerate(){
-            let t = minibatch
+            println!("Train:{}/{}",i,train_count);
+            let minibatch = minibatch
                 .into_iter()
+                /*.map(|x|{
+                    let tx2 = tx2.clone();
+                    let x = x.clone();
+                    std::thread::spawn(move || {
+                    tx2.send(x.load_img())
+                })})*/
+                //.map(|_|->Image<T,U32,U32>{rx2.recv().expect("Thread Error!")})
                 .map(|x| {
-                    let tx = tx.clone();
+                    let (x,tx) = (x.clone(), tx.clone());
                     std::thread::spawn(move ||{
-                        let x:Image<T,U50,U50> = x.load_img();
+                        let x:Image<T,U32,U32> = x.load_img();
                         tx.send(convolution(x))
                 })})
                 .map(|_| rx.recv().expect("Thread Error!"))
                 .collect::<Vec<Array2D<GenericArray<_,U9>,_,_>>>();
-            for img in t{
+            for img in minibatch{
                 for i in img.as_ref().into_iter(){
                     for j in i.as_ref().into_iter(){
                         print!("{:^3}",j.get(4).unwrap());
@@ -101,19 +110,18 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
                 }
                 println!("\n\n");
             }
-            println!("{}",i);
         }
     }  
 }
 
-fn take_n_rand<T> (vec:& Vec<T>,n:usize,rng:&mut rand::ThreadRng )
-    ->Vec<T>
+fn take_n_rand<'a,T> (vec:&'a Vec<T>,n:usize,rng:&mut rand::ThreadRng )
+    ->Vec<&'a T>
 where T:Clone
 {
     (1..n)
         .filter_map(|_| rng.choose(vec))
-        .map(|x|x.clone())
-        .collect::<Vec<T>>()
+        //.map(|x|x.clone())
+        .collect::<Vec<&'a T>>()
 }
 
 type Array2D <T,R,C> = GenericArray<GenericArray<T,C>,R>;
