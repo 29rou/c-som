@@ -37,9 +37,8 @@ impl  ImgData{
                 image::FilterType::Triangle
             );
             for (i,row) in img_array.as_mut().into_iter().enumerate(){
-                let index = i * R::to_usize();
                 for (j,pixel) in row.as_mut().into_iter().enumerate(){
-                    let index = index + j;
+                    let index = i * R::to_usize() + j;
                     *pixel = (*img.get(index).unwrap()).into();
                 }
             }
