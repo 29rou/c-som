@@ -36,6 +36,7 @@ impl<T, K, S> CsomLayerTrait for CsomLayer<T, K, S>
         csomlayer
     }
 }
+
 #[derive(Debug)]
 
 pub struct CSom<T, K, L, N, M>
