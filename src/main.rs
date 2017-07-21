@@ -5,7 +5,6 @@ mod dataset;
 
 use typenum::*;
 
-
 fn main() {
     use dataset::{DataSet, DataSetTrait};
     const PATH: &str = "/home/yoshiki/Downloads/101_ObjectCategories";
