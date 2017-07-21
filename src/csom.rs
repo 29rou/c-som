@@ -92,10 +92,10 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
             let minibatch = (0..batch_size)
                 .map(|_| rx.recv().expect("Thread Error!"))
                 .collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
-            for img in minibatch{
-                for i in img.as_ref().into_iter(){
-                    for j in i.as_ref().into_iter(){
-                        print!("{:^3}",j.get(4).unwrap());
+            for img in minibatch {
+                for i in img.as_ref().into_iter() {
+                    for j in i.as_ref().into_iter() {
+                        print!("{:^3}", j.get(4).unwrap());
                     }
                     println!("");
                 }
