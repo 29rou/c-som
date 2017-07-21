@@ -12,14 +12,12 @@ pub trait DataSetTrait
 impl  DataSetTrait for DataSet
 {
     fn new (p: &str) ->  Self{
-        use std::thread;
         use self::walkdir::WalkDir;
         WalkDir::new(p)
             .into_iter()
             .map(|x| x.unwrap().path().to_path_buf())
             .filter(|x| x.is_file())
-            .map(|x| thread::spawn(||ImgData::new(x)))
-            .map(|x| x.join().expect("Thread Error!"))
+            .map(move |x| ImgData::new(x))
             .collect::<DataSet>()
     }
 }

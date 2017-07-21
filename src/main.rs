@@ -7,6 +7,7 @@ use typenum::*;
 
 
 fn main() {
+    //let img;
     use dataset::{DataSet,DataSetTrait};
     const PATH:&str = "/home/yoshiki/Downloads/101_ObjectCategories";
     let dataset:DataSet = DataSetTrait::new(PATH);

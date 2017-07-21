@@ -88,8 +88,10 @@ impl <T,K,L,N,M> CSom <T,K,L,N,M>
                 .map(|x| {
                     let (x,tx) = (x.clone(), tx.clone());
                     std::thread::spawn(move ||{
-                        let x:Image<T,U32,U32> = x.load_img();
-                        tx.send(convolution(x))
+                        tx.send({
+                            let x:Image<T,U32,U32> = x.load_img();
+                            convolution(x)
+                        })
                 })});
             let minibatch = minibatch
                 .map(|_| rx.recv().expect("Thread Error!"));
