@@ -74,21 +74,22 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
               DataSet: std::iter::FromIterator<ImgData>
     {
         let rng = &mut rand::thread_rng();
-        let minibatchs = (0..train_count).map(|_| take_n_rand(dataset, batch_size, rng));
-        for (i, minibatch) in minibatchs.enumerate() {
+        let minibatchs = (0..train_count)
+            .map(|_|-> Vec<&ImgData> {take_n_rand(dataset, batch_size, rng)})
+            .collect::<Vec<Vec<_>>>();
+        for (i, minibatch) in minibatchs.iter().enumerate() {
             let (tx, rx) = std::sync::mpsc::channel();
             println!("Train:{}/{}", i, train_count);
-            let minibatch = minibatch
-                .into_iter()
-                //.map(|x|->Image<T,U32,U32> {x.load_img()})
-                .map(|x| {
-                    let (x,tx) = (x.clone(), tx.clone());
-                    std::thread::spawn(move ||{
-                        tx.send({
-                            let x:Image<T,U32,U32> = x.load_img();
-                            convolution(x)
-                        })
-                })});
+            for imgdata in minibatch{
+                let imgdata:ImgData = (*imgdata).clone();
+                let tx = tx.clone();
+                std::thread::spawn(move ||{
+                    let img:Image<T,U32,U32> = imgdata.load_img();
+                    let result = convolution(img);
+                    tx.send(result)
+                });
+            }
+             println!("count:{}", minibatch.iter().count());
             let minibatch = (0..batch_size)
                 .map(|_| rx.recv().expect("Thread Error!"))
                 .collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
@@ -108,7 +109,7 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
 fn take_n_rand<'a, T>(vec: &'a Vec<T>, n: usize, rng: &mut rand::ThreadRng) -> Vec<&'a T>
     where T: Clone
 {
-    (1..n)
+    (0..n)
         .filter_map(|_| rng.choose(vec))
         .collect::<Vec<&'a T>>()
 }
