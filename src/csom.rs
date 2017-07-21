@@ -75,28 +75,29 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
     {
         let rng = &mut rand::thread_rng();
         let minibatchs = (0..train_count)
-            .map(|_|-> Vec<&ImgData> {take_n_rand(dataset, batch_size, rng)})
+            .map(|_| -> Vec<&ImgData> { take_n_rand(dataset, batch_size, rng) })
             .collect::<Vec<Vec<_>>>();
         for (i, minibatch) in minibatchs.iter().enumerate() {
             let (tx, rx) = std::sync::mpsc::channel();
             println!("Train:{}/{}", i, train_count);
-            for imgdata in minibatch{
-                let imgdata:ImgData = (*imgdata).clone();
+            for imgdata in minibatch {
+                let imgdata: ImgData = (*imgdata).clone();
                 let tx = tx.clone();
-                std::thread::spawn(move ||{
-                    let img:Image<T,U32,U32> = imgdata.load_img();
-                    let result = convolution(img);
-                    tx.send(result)
-                });
+                std::thread::spawn(move || {
+                                       let img: Image<T,
+                                                      U32,
+                                                      U32> = imgdata.load_img();
+                                       let result = convolution(img);
+                                       tx.send(result)
+                                   });
             }
-             println!("count:{}", minibatch.iter().count());
             let minibatch = (0..batch_size)
                 .map(|_| rx.recv().expect("Thread Error!"))
                 .collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
-            for img in minibatch{
-                for i in img.as_ref().into_iter(){
-                    for j in i.as_ref().into_iter(){
-                        print!("{:^3}",j.get(4).unwrap());
+            for img in minibatch {
+                for i in img.as_ref().into_iter() {
+                    for j in i.as_ref().into_iter() {
+                        print!("{:^3}", j.get(4).unwrap());
                     }
                     println!("");
                 }
