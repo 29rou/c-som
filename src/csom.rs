@@ -50,7 +50,7 @@ pub struct CSom<T, K, L, N, M>
 }
 
 impl<T, K, L, N, M> CSom<T, K, L, N, M>
-    where T: From<f32> + From<u8> + Clone + PartialOrd + SampleRange,
+    where T: From<f32> + From<u8> + Copy + PartialOrd + SampleRange + std::marker::Send + std::fmt::Display,
           K: ArrayLength<T>,
           L: ArrayLength<CsomLayer<T, K, N>>,
           N: ArrayLength<GenericArray<T, K>>,
@@ -70,8 +70,6 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
         }
     }
     pub fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: & DataSet)
-        where T: std::marker::Send +'static + std::fmt::Display,
-              DataSet: std::iter::FromIterator<std::sync::Arc<ImgData>>
     {
         let (tx, rx) = std::sync::mpsc::channel();
         let rng = &mut rand::thread_rng();
@@ -81,18 +79,18 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
             println!("Train:{}/{}", i, train_count);
             let _ = minibatch
                 .into_iter()
-                .map(|x| {
+                .map( |x| {
                         let tx =tx.clone();
                         let x = x.clone();
-                         //let (x, tx) = (x.clone(), tx.clone());
                          std::thread::spawn(move || {
-                        let x: Image<T, U32, U32> = x.load_img();
+                        let x = x.load_img() as Image<T,U32,U32>;
                         let result = convolution(x);
-                        tx.send(result)
+                        tx.send(0)
                     })
                      })
                 .map(|_| rx.recv().expect("Thread Error!"))
-                .collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
+                .count();
+                //.collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
             /*for img in minibatch {
                 for i in img.as_ref().into_iter() {
                     for j in i.as_ref().into_iter() {
@@ -106,9 +104,7 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
     }
 }
 
-fn take_n_rand<'a, T>(vec: &'a Vec<T>, n: usize, rng: &mut rand::ThreadRng) -> Vec<&'a T>
-    where T: Clone
-{
+fn take_n_rand<'a, T>(vec: &'a Vec<T>, n: usize, rng: &mut rand::ThreadRng) -> Vec<&'a T> {
     (0..n)
         .filter_map(|_| rng.choose(vec))
         .collect::<Vec<&'a T>>()
@@ -116,7 +112,7 @@ fn take_n_rand<'a, T>(vec: &'a Vec<T>, n: usize, rng: &mut rand::ThreadRng) -> V
 
 type Array2D<T, R, C> = GenericArray<GenericArray<T, C>, R>;
 fn convolution<T, R, C>(array: Array2D<T, R, C>) -> Array2D<GenericArray<T, U9>, R, C>
-    where T: Clone,
+    where T: Copy,
           R: ArrayLength<GenericArray<T, C>> + ArrayLength<GenericArray<GenericArray<T, U9>, C>>,
           C: ArrayLength<T> + ArrayLength<GenericArray<T, U9>>
 {
@@ -127,8 +123,7 @@ fn convolution<T, R, C>(array: Array2D<T, R, C>) -> Array2D<GenericArray<T, U9>,
             for col in 1..(C::to_usize() - 1) {
                 for r_k in 0..2 {
                     for c_k in 0..2 {
-                        result[row][col][c_k + r_k * 3] = array[row + r_k - 1][col + c_k - 1]
-                            .clone();
+                        result[row][col][c_k + r_k * 3] = array[row + r_k - 1][col + c_k - 1];
                     }
                 }
             }

@@ -2,7 +2,7 @@ extern crate walkdir;
 use std;
 use imgdata::ImgData;
 
-pub type DataSet = std::vec::Vec<std::sync::Arc<ImgData>>;
+pub type DataSet = Vec<std::sync::Arc<ImgData>>;
 
 pub trait DataSetTrait {
     fn new(p: &str) -> Self;
