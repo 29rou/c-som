@@ -2,16 +2,14 @@ extern crate walkdir;
 use std;
 use imgdata::ImgData;
 
-pub type DataSet  = std::vec::Vec<ImgData>;
+pub type DataSet = std::vec::Vec<ImgData>;
 
-pub trait DataSetTrait 
-{
-    fn new(p:&str)->Self;
+pub trait DataSetTrait {
+    fn new(p: &str) -> Self;
 }
 
-impl  DataSetTrait for DataSet
-{
-    fn new (p: &str) ->  Self{
+impl DataSetTrait for DataSet {
+    fn new(p: &str) -> Self {
         use self::walkdir::WalkDir;
         WalkDir::new(p)
             .into_iter()
