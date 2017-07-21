@@ -5,6 +5,7 @@ use self::generic_array::{GenericArray, ArrayLength};
 
 pub type Image<T, R, C> = GenericArray<GenericArray<T, C>, R>;
 
+
 #[derive (Clone,Debug)]
 pub struct ImgData {
     path: std::path::PathBuf,
