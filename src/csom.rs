@@ -108,7 +108,7 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
 fn take_n_rand<'a, T>(vec: &'a Vec<T>, n: usize, rng: &mut rand::ThreadRng) -> Vec<&'a T>
     where T: Clone
 {
-    (1..n)
+    (0..n)
         .filter_map(|_| rng.choose(vec))
         .collect::<Vec<&'a T>>()
 }
