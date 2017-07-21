@@ -24,7 +24,7 @@ impl<T, K, S> CsomLayerTrait for CsomLayer<T, K, S>
           S: ArrayLength<GenericArray<T, K>>
 {
     fn new(rng: &mut rand::ThreadRng) -> Self {
-        let mut csomlayer:GenericArray<GenericArray<T, K>, S>;
+        let mut csomlayer: GenericArray<GenericArray<T, K>, S>;
         unsafe {
             csomlayer = std::mem::uninitialized();
             for i in &mut csomlayer[..] {
