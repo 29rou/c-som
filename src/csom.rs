@@ -69,30 +69,31 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
             csom
         }
     }
-    pub fn train(&self, batch_size: usize, train_count: usize, dataset: &DataSet)
-        where T: std::marker::Send + 'static + std::fmt::Display,
-              DataSet: std::iter::FromIterator<ImgData>
+    pub fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: & DataSet)
+        where T: std::marker::Send +'static + std::fmt::Display,
+              DataSet: std::iter::FromIterator<std::sync::Arc<ImgData>>
     {
+        let (tx, rx) = std::sync::mpsc::channel();
         let rng = &mut rand::thread_rng();
-        let minibatchs = (0..train_count).map(|_| take_n_rand(dataset, batch_size, rng));
+        let minibatchs = (0..train_count)
+            .map(|_| take_n_rand(dataset, batch_size, rng));
         for (i, minibatch) in minibatchs.enumerate() {
-            let (tx, rx) = std::sync::mpsc::channel();
             println!("Train:{}/{}", i, train_count);
-            let minibatch = minibatch
+            let _ = minibatch
                 .into_iter()
-                //.map(|x|->Image<T,U32,U32> {x.load_img()})
                 .map(|x| {
-                    let (x,tx) = (x.clone(), tx.clone());
-                    std::thread::spawn(move ||{
-                        tx.send({
-                            let x:Image<T,U32,U32> = x.load_img();
-                            convolution(x)
-                        })
-                })});
-            let minibatch = (0..batch_size)
+                        let tx =tx.clone();
+                        let x = x.clone();
+                         //let (x, tx) = (x.clone(), tx.clone());
+                         std::thread::spawn(move || {
+                        let x: Image<T, U32, U32> = x.load_img();
+                        let result = convolution(x);
+                        tx.send(result)
+                    })
+                     })
                 .map(|_| rx.recv().expect("Thread Error!"))
                 .collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
-            for img in minibatch {
+            /*for img in minibatch {
                 for i in img.as_ref().into_iter() {
                     for j in i.as_ref().into_iter() {
                         print!("{:^3}", j.get(4).unwrap());
@@ -100,7 +101,7 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
                     println!("");
                 }
                 println!("\n\n");
-            }
+            }*/
         }
     }
 }
