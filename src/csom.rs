@@ -11,7 +11,7 @@ use self::typenum::*;
 use self::rand::{Rng, thread_rng};
 use self::rand::distributions::range::SampleRange;
 
-type CsomLayer<T, K, S> = GenericArray<GenericArray<T, K>, S>;
+type CsomLayer<T, K, S> = std::sync::Mutex<GenericArray<GenericArray<T, K>, S>>;
 
 trait CsomLayerTrait {
     fn new(rng: &mut rand::ThreadRng) -> Self;
@@ -24,7 +24,7 @@ impl<T, K, S> CsomLayerTrait for CsomLayer<T, K, S>
           S: ArrayLength<GenericArray<T, K>>
 {
     fn new(rng: &mut rand::ThreadRng) -> Self {
-        let mut csomlayer: CsomLayer<T, K, S>;
+        let mut csomlayer:GenericArray<GenericArray<T, K>, S>;
         unsafe {
             csomlayer = std::mem::uninitialized();
             for i in &mut csomlayer[..] {
@@ -33,7 +33,7 @@ impl<T, K, S> CsomLayerTrait for CsomLayer<T, K, S>
                 }
             }
         }
-        csomlayer
+        std::sync::Mutex::new(csomlayer)
     }
 }
 #[derive(Debug)]
