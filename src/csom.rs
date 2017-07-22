@@ -52,9 +52,9 @@ pub struct CSomBase<T, K, L, N, M>
 
 pub type CSom<T, K, L, N, M> = std::sync::Arc<CSomBase<T, K, L, N, M>>;
 
-pub trait CSomTrait <T, K, L, N, M>{
+pub trait CSomTrait<T, K, L, N, M> {
     fn new() -> Self;
-    fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: & DataSet);
+    fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: &DataSet);
 }
 
 impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
@@ -78,15 +78,15 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
         }
         std::sync::Arc::new(csom)
     }
-    fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: & DataSet)          
+    fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: & DataSet)
     {
         let (tx, rx) = std::sync::mpsc::channel();
+        let (tx2, rx2) = std::sync::mpsc::channel();
         let rng = &mut rand::thread_rng();
         let minibatchs = (0..train_count)
             .map(|_| take_n_rand(dataset, batch_size, rng));
         for (i, minibatch) in minibatchs.enumerate() {
-            println!("Train:{}/{}", i, train_count);
-            let _ = minibatch
+            let n = minibatch
                 .into_iter()
                 .map( |x| {
                         let tx =tx.clone();
@@ -96,16 +96,30 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
                         let x = x.load_img() as Image<T,U32,U32>;
                         let result = convolution(x);
                         {
-                            let mut t = csom.mid_layers[0].lock().unwrap();
-                            t[0][0] = t[0][0] + (1.0).into();
+                            let mid_layers = csom.mid_layers[0].lock().unwrap();
                         }
                         tx.send(result)
                     })
                      })
                 .map(|_| rx.recv().expect("Thread Error!"))
                 .count();
-                //.collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
-            /*for img in minibatch {
+            let n = (0..n).map(|x|{
+                let tx2 = tx2.clone();
+                let x = x.clone();
+                let csom = self.clone();
+                std::thread::spawn(move ||{
+                    {
+                        let mut mid_layers = csom.mid_layers[0].lock().unwrap();
+                        mid_layers[0][0] = mid_layers[0][0] + (1.0).into();
+                    }
+                    tx2.send(0)
+                })
+            })
+            .map(|_| rx2.recv().expect("Thread Error!"))
+            .count();
+//.collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
+                println!("{}, {}", i, self.mid_layers[0].lock().unwrap()[0][0]);
+/*for img in minibatch {
                 for i in img.as_ref().into_iter() {
                     for j in i.as_ref().into_iter() {
                         print!("{:^3}", j.get(4).unwrap());
