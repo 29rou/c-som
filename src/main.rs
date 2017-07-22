@@ -7,9 +7,10 @@ use typenum::*;
 
 fn main() {
     use dataset::{DataSet, DataSetTrait};
+    use csom::CSomTrait;
     const PATH: &str = "/home/yoshiki/Downloads/101_ObjectCategories";
     let dataset: DataSet = DataSetTrait::new(PATH);
-    let csom: csom::CSom<f32, U9, U2, U9, U9> = csom::CSom::new();
+    let csom: csom::CSom<f32, U9, U2, U9, U9> = CSomTrait::new();
     for entry in csom.mid_layers.as_ref(){
         let entry = entry.lock().unwrap()[0];
         for entry in entry{

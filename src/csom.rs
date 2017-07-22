@@ -38,28 +38,35 @@ impl<T, K, S> CsomLayerTrait for CsomLayer<T, K, S>
 }
 
 #[derive(Debug)]
-
-pub struct CSom<T, K, L, N, M>
+pub struct CSomBase<T, K, L, N, M>
     where T: Sized,
-          K: ArrayLength<T>,
-          L: ArrayLength<CsomLayer<T, K, N>>,
-          N: ArrayLength<GenericArray<T, K>>,
-          M: ArrayLength<GenericArray<T, K>>,
-{
-    pub mid_layers: GenericArray<CsomLayer<T, K, N>, L>,
-    final_layer: CsomLayer<T, K, M>,
-}
-
-impl<T, K, L, N, M> CSom<T, K, L, N, M>
-    where T: From<f32> + From<u8> + Copy + PartialOrd + SampleRange + std::marker::Send + std::fmt::Display,
           K: ArrayLength<T>,
           L: ArrayLength<CsomLayer<T, K, N>>,
           N: ArrayLength<GenericArray<T, K>>,
           M: ArrayLength<GenericArray<T, K>>
 {
-    pub fn new() -> Self {
+    pub mid_layers: GenericArray<CsomLayer<T, K, N>, L>,
+    final_layer: CsomLayer<T, K, M>,
+}
+
+pub type CSom<T, K, L, N, M> = std::sync::Arc<CSomBase<T, K, L, N, M>>;
+
+pub trait CSomTrait <T, K, L, N, M>{
+    fn new() -> Self;
+    fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: & DataSet);
+}
+
+impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
+    where T: 'static+From<f32> + From<u8> + Copy + PartialOrd + SampleRange + std::marker::Send + std::fmt::Display,
+          K: ArrayLength<T>+'static,
+          L: ArrayLength<CsomLayer<T, K, N>>+'static,
+          N: ArrayLength<GenericArray<T, K>>+'static,
+          M: ArrayLength<GenericArray<T, K>>+'static,
+          CSom<T, K, L, N, M>:std::marker::Send
+{
+    fn new() -> Self {
         let rng = &mut thread_rng();
-        let mut csom: CSom<T, K, L, N, M>;
+        let mut csom: CSomBase<T, K, L, N, M>;
         unsafe {
             use std;
             csom = std::mem::uninitialized();
@@ -73,19 +80,11 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
                 .count();*/
             //println!("output");
             csom.final_layer = CsomLayerTrait::new(rng);
-            csom
         }
+        std::sync::Arc::new(csom)
     }
-    pub fn train<'a>(self, batch_size: usize, train_count: usize, dataset: & DataSet)
-    where GenericArray<CsomLayer<T, K, N>, L>:std::marker::Send,
-          CsomLayer<T, K, N>:std::marker::Send,
-          CsomLayer<T, K, M>:std::marker::Send,
-          CSom<T, K, L, N, M>:std::marker::Send,
-          std::sync::Arc<CSom<T, K, L, N, M>>:std::marker::Send,
-          T:'static,K:'static,L:'static,N:'static,M:'static
-
+    fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: & DataSet)          
     {
-        let csom = std::sync::Arc::new(self);
         let (tx, rx) = std::sync::mpsc::channel();
         let rng = &mut rand::thread_rng();
         let minibatchs = (0..train_count)
@@ -97,11 +96,12 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
                 .map( |x| {
                         let tx =tx.clone();
                         let x = x.clone();
-                        let csom = csom.clone();
+                        let csom = self.clone();
                          std::thread::spawn(move || {
                         let x = x.load_img() as Image<T,U32,U32>;
                         let result = convolution(x);
-                        csom.mid_layers[0].lock().unwrap();
+                        let mut t = csom.mid_layers[0].lock().unwrap()[0][0];
+                        //t = t + (1.0).into();
                         tx.send(0)
                     })
                      })
