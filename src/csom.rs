@@ -44,9 +44,9 @@ pub struct CSom<T, K, L, N, M>
           K: ArrayLength<T>,
           L: ArrayLength<CsomLayer<T, K, N>>,
           N: ArrayLength<GenericArray<T, K>>,
-          M: ArrayLength<GenericArray<T, K>>
+          M: ArrayLength<GenericArray<T, K>>,
 {
-    mid_layers: GenericArray<CsomLayer<T, K, N>, L>,
+    pub mid_layers: GenericArray<CsomLayer<T, K, N>, L>,
     final_layer: CsomLayer<T, K, M>,
 }
 
@@ -66,12 +66,26 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
             for i in &mut csom.mid_layers[..] {
                 *i = CsomLayerTrait::new(rng);
             }
+            /*let _ = csom.mid_layers
+                .as_mut()
+                .into_iter()
+                .map(|x| *x=CsomLayerTrait::new(rng))
+                .count();*/
+            //println!("output");
             csom.final_layer = CsomLayerTrait::new(rng);
             csom
         }
     }
-    pub fn train<'a>(&self, batch_size: usize, train_count: usize, dataset: & DataSet)
+    pub fn train<'a>(self, batch_size: usize, train_count: usize, dataset: & DataSet)
+    where GenericArray<CsomLayer<T, K, N>, L>:std::marker::Send,
+          CsomLayer<T, K, N>:std::marker::Send,
+          CsomLayer<T, K, M>:std::marker::Send,
+          CSom<T, K, L, N, M>:std::marker::Send,
+          std::sync::Arc<CSom<T, K, L, N, M>>:std::marker::Send,
+          T:'static,K:'static,L:'static,N:'static,M:'static
+
     {
+        let csom = std::sync::Arc::new(self);
         let (tx, rx) = std::sync::mpsc::channel();
         let rng = &mut rand::thread_rng();
         let minibatchs = (0..train_count)
@@ -83,9 +97,11 @@ impl<T, K, L, N, M> CSom<T, K, L, N, M>
                 .map( |x| {
                         let tx =tx.clone();
                         let x = x.clone();
+                        let csom = csom.clone();
                          std::thread::spawn(move || {
                         let x = x.load_img() as Image<T,U32,U32>;
                         let result = convolution(x);
+                        csom.mid_layers[0].lock().unwrap();
                         tx.send(0)
                     })
                      })
