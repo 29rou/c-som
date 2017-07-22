@@ -39,14 +39,14 @@ impl<T, K, S> CsomLayerTrait for CsomLayer<T, K, S>
 }
 
 #[derive(Debug)]
-pub struct CSomBase<T, K, L, N, M>
+struct CSomBase<T, K, L, N, M>
     where T: Sized,
           K: ArrayLength<T>,
           L: ArrayLength<CsomLayer<T, K, N>>,
           N: ArrayLength<GenericArray<T, K>>,
           M: ArrayLength<GenericArray<T, K>>
 {
-    pub mid_layers: GenericArray<CsomLayer<T, K, N>, L>,
+    mid_layers: GenericArray<CsomLayer<T, K, N>, L>,
     final_layer: CsomLayer<T, K, M>,
 }
 
@@ -95,17 +95,14 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
                          std::thread::spawn(move || {
                         let x = x.load_img() as Image<T,U32,U32>;
                         let result = convolution(x);
-                        {
-                            let mid_layers = csom.mid_layers[0].lock().unwrap();
-                        }
-                        tx.send(result)
+                        let t = csom.mid_layers[0].lock().unwrap()[0][0].clone();
+                        tx.send(t)
                     })
                      })
                 .map(|_| rx.recv().expect("Thread Error!"))
                 .count();
-            let n = (0..n).map(|x|{
+            let n = (0..n).map(|_|{
                 let tx2 = tx2.clone();
-                let x = x.clone();
                 let csom = self.clone();
                 std::thread::spawn(move ||{
                     {
@@ -117,17 +114,7 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
             })
             .map(|_| rx2.recv().expect("Thread Error!"))
             .count();
-//.collect::<Vec<Array2D<GenericArray<_, U9>, _, _>>>();
                 println!("{}, {}", i, self.mid_layers[0].lock().unwrap()[0][0]);
-/*for img in minibatch {
-                for i in img.as_ref().into_iter() {
-                    for j in i.as_ref().into_iter() {
-                        print!("{:^3}", j.get(4).unwrap());
-                    }
-                    println!("");
-                }
-                println!("\n\n");
-            }*/
         }
     }
 }
