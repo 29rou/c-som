@@ -1,6 +1,7 @@
 extern crate rand;
 extern crate typenum;
 extern crate generic_array;
+extern crate num;
 use std;
 use imgdata::Image;
 use imgdata::ImgData;
@@ -57,7 +58,7 @@ pub trait CSomTrait <T, K, L, N, M>{
 }
 
 impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
-    where T: 'static+From<f32> + From<u8> + Copy + PartialOrd + SampleRange + std::marker::Send + std::fmt::Display,
+    where T: num::Float+'static+From<f32> + From<u8> + Copy + PartialOrd + SampleRange + std::marker::Send + std::fmt::Display,
           K: ArrayLength<T>+'static,
           L: ArrayLength<CsomLayer<T, K, N>>+'static,
           N: ArrayLength<GenericArray<T, K>>+'static,
@@ -73,12 +74,6 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
             for i in &mut csom.mid_layers[..] {
                 *i = CsomLayerTrait::new(rng);
             }
-            /*let _ = csom.mid_layers
-                .as_mut()
-                .into_iter()
-                .map(|x| *x=CsomLayerTrait::new(rng))
-                .count();*/
-            //println!("output");
             csom.final_layer = CsomLayerTrait::new(rng);
         }
         std::sync::Arc::new(csom)
@@ -100,9 +95,11 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
                          std::thread::spawn(move || {
                         let x = x.load_img() as Image<T,U32,U32>;
                         let result = convolution(x);
-                        let mut t = csom.mid_layers[0].lock().unwrap()[0][0];
-                        //t = t + (1.0).into();
-                        tx.send(0)
+                        {
+                            let mut t = csom.mid_layers[0].lock().unwrap();
+                            t[0][0] = t[0][0] + (1.0).into();
+                        }
+                        tx.send(result)
                     })
                      })
                 .map(|_| rx.recv().expect("Thread Error!"))

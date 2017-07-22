@@ -9,6 +9,7 @@ walkdir ="1"
 rand = "0.3"
 generic-array = "0.8.2"
 typenum = "1.9.0"
+num = "0.1.40"
 
 
 # The development profile, used for `cargo build`.
