@@ -13,7 +13,8 @@ impl DataSetTrait for DataSet {
         use self::walkdir::WalkDir;
         WalkDir::new(p)
             .into_iter()
-            .map(|x| x.unwrap().path().to_path_buf())
+            .flat_map(|x| x)
+            .map(|x| x.path().to_path_buf())
             .filter(|x| x.is_file())
             .map(move |x| std::sync::Arc::new(ImgData::new(x)))
             .collect::<DataSet>()

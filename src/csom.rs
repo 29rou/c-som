@@ -6,7 +6,6 @@ extern crate crossbeam;
 
 use std;
 use imgdata::Image;
-//use imgdata::ImgData;
 use dataset::DataSet;
 
 use self::generic_array::{ArrayLength, GenericArray};
@@ -92,35 +91,33 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
             .map(|_| take_n_rand(dataset, batch_size, rng));
         for (i, minibatch) in minibatchs.enumerate() {
             crossbeam::scope(|scope|{
-                let n = minibatch
-                    .into_iter()
-                    .map(|x|{
-                            let tx =tx.clone();
-                            let csom = self.clone();
-                            scope.spawn( move|| {
-                            let x = x.load_img() as Image<T,U32,U32>;
-                            let result = convolution(x);
-                            let mid_layers = csom.mid_layers[0].lock().unwrap();
-                            let t = mid_layers[0][0].clone();
-                            tx.send(result)
-                        })
-                    })
-                    .map(|_| rx.recv().expect("Thread Error!"))
-                    .count();
-                let n = (0..n).map(|_|{
+                for imgdata in minibatch{
+                    let tx = tx.clone();
+                    let csom = self.clone();
+                    scope.spawn(move ||{
+                        let img = imgdata.load_img() as Image<T,U32,U32>;
+                        let result = convolution(img);
+                        let mid_layers = csom.mid_layers[0].lock().unwrap();
+                        let t = mid_layers[0][0];
+                        tx.send(result)
+                    });
+                }
+                for _ in 0..batch_size{
+                    rx.recv().expect("Thread Error!");
+                }
+                for _ in 0..batch_size{
                     let tx2 = tx2.clone();
                     let csom = self.clone();
                     scope.spawn(move ||{
-                        {
-                            let mut mid_layers = csom.mid_layers[0].lock().unwrap();
-                            mid_layers[0][0] = mid_layers[0][0] + (1.0).into();
-                        }
-                        tx2.send(0)
-                    })
-                })
-                .map(|_| rx2.recv().expect("Thread Error!"))
-                .count();
-                    println!("{}, {}, {}", n,i, self.mid_layers[0].lock().unwrap()[0][0]);
+                        let mut mid_layers = csom.mid_layers[0].lock().unwrap();
+                        mid_layers[0][0] = mid_layers[0][0] + (1.0).into();
+                        tx2.send(0);
+                    });
+                }
+                for _ in 0..batch_size{
+                    rx2.recv().expect("Thread Error!");
+                }
+                    println!("{}, {}", i, self.mid_layers[0].lock().unwrap()[0][0]);
             });
             }
     }
