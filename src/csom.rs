@@ -97,29 +97,31 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
                     scope.spawn(move ||{
                         let img = imgdata.load_img() as Image<T,U32,U32>;
                         let result = convolution(img);
-                        let mid_layers = csom.mid_layers[0].lock().unwrap();
-                        let t = mid_layers[0][0];
+                        {
+                            let mid_layers = csom.mid_layers[0].lock().unwrap();
+                            let t = mid_layers[0][0];
+                        }
                         tx.send(result)
                     });
                 }
-                //let results = (0..batch_size)
-                  //  .map(|_| rx.recv().expect("Thread Error!"));
-                for _ in 0..batch_size{
-                    rx.recv().expect("Thread Error!");
-                }
-                for _ in 0..batch_size{
+                let results = (0..batch_size)
+                    .map(|_| rx.recv().expect("Thread Error!") )
+                    .collect::<Vec<_>>();
+                for x in results{
                     let tx2 = tx2.clone();
                     let csom = self.clone();
                     scope.spawn(move ||{
-                        let mut mid_layers = csom.mid_layers[0].lock().unwrap();
-                        mid_layers[0][0] = mid_layers[0][0] + (1.0).into();
-                        tx2.send(0);
+                        {
+                            let mut mid_layers = csom.mid_layers[0].lock().unwrap();
+                            mid_layers[0][0] = mid_layers[0][0] + (1.0).into();
+                        }
+                        tx2.send(x)
                     });
                 }
                 for _ in 0..batch_size{
                     rx2.recv().expect("Thread Error!");
                 }
-                    println!("{}, {}", i, self.mid_layers[0].lock().unwrap()[0][0]);
+                    //println!("{}, {}", i, self.mid_layers[0].lock().unwrap()[0][0]);
             });
             }
     }
@@ -151,4 +153,18 @@ fn convolution<T, R, C>(array: Array2D<T, R, C>) -> Array2D<GenericArray<T, U9>,
         }
     }
     result
+}
+
+fn som_dist<T, R, C>(a:&[&[T]], b: &[&[T]]) -> T
+    where T: Copy+num::Float+From<f32>,
+          R: ArrayLength<GenericArray<T, C>>,
+          C: ArrayLength<T>
+{
+    let mut c:T = num::zero();
+    for row in 0..a.len(){
+        for col in 0..a.get(row).unwrap().len(){
+            c = c + num::pow((a[row][col] - b[row][col]),2);
+        }
+    }
+    T::sqrt(c.into()).into()
 }
