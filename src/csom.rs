@@ -60,14 +60,14 @@ pub trait CSomTrait<T, K, L, N, M> {
 }
 
 impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
-    where T: num::Float + 'static+From<f32>
+    where T: num::Float +From<f32>
             + From<u8> + Copy + PartialOrd
             + SampleRange + std::marker::Send
             + std::fmt::Display,
-          K: ArrayLength<T> + 'static,
-          L: ArrayLength<CsomLayer<T, K, N>> + 'static,
-          N: ArrayLength<GenericArray<T, K>> + 'static,
-          M: ArrayLength<GenericArray<T, K>> + 'static,
+          K: ArrayLength<T> ,
+          L: ArrayLength<CsomLayer<T, K, N>> ,
+          N: ArrayLength<GenericArray<T, K>> ,
+          M: ArrayLength<GenericArray<T, K>> ,
           CSom<T, K, L, N, M>:std::marker::Send
 {
     fn new() -> Self {
@@ -93,30 +93,30 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
         for (i, minibatch) in minibatchs.enumerate() {
             let n = minibatch
                 .into_iter()
-                .map( |x| {
+                .map( |ref x| crossbeam::scope(|scope|{
                         let tx =tx.clone();
-                        let x = x.clone();
                         let csom = self.clone();
-                         std::thread::spawn( move|| {
+                         scope.spawn( move|| {
                         let x = x.load_img() as Image<T,U32,U32>;
-                        let _ = convolution(x);
-                        let t = csom.mid_layers[0].lock().unwrap()[0][0].clone();
-                        tx.send(t)
+                        let result = convolution(x);
+                        let mid_layers = csom.mid_layers[0].lock().unwrap();
+                        let t = mid_layers[0][0].clone();
+                        tx.send(result)
                     })
-                     })
+                     }))
                 .map(|_| rx.recv().expect("Thread Error!"))
                 .count();
-            let n = (0..n).map(|_|{
+            let n = (0..n).map(|_|crossbeam::scope(|scope|{
                 let tx2 = tx2.clone();
                 let csom = self.clone();
-                std::thread::spawn(move ||{
+                scope.spawn(move ||{
                     {
                         let mut mid_layers = csom.mid_layers[0].lock().unwrap();
                         mid_layers[0][0] = mid_layers[0][0] + (1.0).into();
                     }
                     tx2.send(0)
                 })
-            })
+            }))
             .map(|_| rx2.recv().expect("Thread Error!"))
             .count();
                 println!("{}, {}, {}", n,i, self.mid_layers[0].lock().unwrap()[0][0]);
