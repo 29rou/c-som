@@ -2,6 +2,8 @@ extern crate rand;
 extern crate typenum;
 extern crate generic_array;
 extern crate num;
+extern crate crossbeam;
+
 use std;
 use imgdata::Image;
 //use imgdata::ImgData;
@@ -58,11 +60,14 @@ pub trait CSomTrait<T, K, L, N, M> {
 }
 
 impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
-    where T: num::Float+'static+From<f32> + From<u8> + Copy + PartialOrd + SampleRange + std::marker::Send + std::fmt::Display,
-          K: ArrayLength<T>+'static,
-          L: ArrayLength<CsomLayer<T, K, N>>+'static,
-          N: ArrayLength<GenericArray<T, K>>+'static,
-          M: ArrayLength<GenericArray<T, K>>+'static,
+    where T: num::Float + 'static+From<f32>
+            + From<u8> + Copy + PartialOrd
+            + SampleRange + std::marker::Send
+            + std::fmt::Display,
+          K: ArrayLength<T> + 'static,
+          L: ArrayLength<CsomLayer<T, K, N>> + 'static,
+          N: ArrayLength<GenericArray<T, K>> + 'static,
+          M: ArrayLength<GenericArray<T, K>> + 'static,
           CSom<T, K, L, N, M>:std::marker::Send
 {
     fn new() -> Self {
@@ -92,7 +97,7 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
                         let tx =tx.clone();
                         let x = x.clone();
                         let csom = self.clone();
-                         std::thread::spawn(move || {
+                         std::thread::spawn( move|| {
                         let x = x.load_img() as Image<T,U32,U32>;
                         let _ = convolution(x);
                         let t = csom.mid_layers[0].lock().unwrap()[0][0].clone();
