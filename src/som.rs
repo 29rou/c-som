@@ -2,7 +2,7 @@ extern crate generic_array;
 extern crate typenum;
 extern crate num;
 use std;
-use self::generic_array::{GenericArray,ArrayLength};
+use self::generic_array::{GenericArray, ArrayLength};
 use self::typenum::*;
 
 
@@ -29,24 +29,23 @@ fn convolution<T, R, C>(array: Array2D<T, R, C>) -> Array2D<GenericArray<T, U9>,
     result
 }
 
-fn som_dist<T,K, N, R,C>(img :&Array2D<T,R,C>,csomcell:&GenericArray<T,U9>,row:usize,col:usize)->T
-where T: Copy+num::Float+From<f32>,
-     K: ArrayLength<T> ,
-     N: ArrayLength<GenericArray<T, K>>,
+fn som_dist<T, R, C>(img: &Array2D<T, R, C>,
+                     csomcell: &GenericArray<T, U9>,
+                     row: usize,
+                     col: usize)
+                     -> T
+    where T: Copy + num::Float,
           R: ArrayLength<GenericArray<T, C>>,
           C: ArrayLength<T>
 {
-    let img_cell = &[
-        &img[row][col..(col+2)],
-        &img[row+1][col..(col+2)],
-        &img[row+2][col..(col+2)]
-    ];
-    let mut c:T = num::zero();
-    for row in 0..3{
-        for col in 0..3{
-            let index = col + row*3;
-            c = c + num::pow((img_cell[row][col] - csomcell[index]),2);
+    let mut result: T = num::zero();
+    for r in 0..3 {
+        for c in 0..3 {
+            let index = c + r * 3;
+            let row = r + row;
+            let col = c + col;
+            result = result + num::pow((img[row][col] - csomcell[index]), 2);
         }
     }
-    T::sqrt(c.into()).into()
+    T::sqrt(result.into()).into()
 }

@@ -14,4 +14,3 @@ fn main() {
     let csom: CSom<f32, U9, U2, U9, U9> = CSomTrait::new();
     csom.train(10, 1000, &dataset);
 }
-
