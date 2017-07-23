@@ -155,15 +155,23 @@ fn convolution<T, R, C>(array: Array2D<T, R, C>) -> Array2D<GenericArray<T, U9>,
     result
 }
 
-fn som_dist<T, R, C>(a:&[&[T]], b: &[&[T]]) -> T
-    where T: Copy+num::Float+From<f32>,
+fn som_dist<T,K, N, R,C>(img :&Array2D<T,R,C>,csomcell:&GenericArray<T,U9>,row:usize,col:usize)->T
+where T: Copy+num::Float+From<f32>,
+     K: ArrayLength<T> ,
+     N: ArrayLength<GenericArray<T, K>>,
           R: ArrayLength<GenericArray<T, C>>,
           C: ArrayLength<T>
 {
+    let img_cell = &[
+        &img[row][col..(col+2)],
+        &img[row+1][col..(col+2)],
+        &img[row+2][col..(col+2)]
+    ];
     let mut c:T = num::zero();
-    for row in 0..a.len(){
-        for col in 0..a.get(row).unwrap().len(){
-            c = c + num::pow((a[row][col] - b[row][col]),2);
+    for row in 0..3{
+        for col in 0..3{
+            let index = col + row*3;
+            c = c + num::pow((img[row][col] - csomcell[index]),2);
         }
     }
     T::sqrt(c.into()).into()
