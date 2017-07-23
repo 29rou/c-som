@@ -102,6 +102,8 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
                         tx.send(result)
                     });
                 }
+                //let results = (0..batch_size)
+                  //  .map(|_| rx.recv().expect("Thread Error!"));
                 for _ in 0..batch_size{
                     rx.recv().expect("Thread Error!");
                 }
