@@ -96,12 +96,11 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
                     let csom = self.clone();
                     scope.spawn(move ||{
                         let img = imgdata.load_img() as Image<T,U32,U32>;
-                        let result = convolution(img);
                         {
                             let mid_layers = csom.mid_layers[0].lock().unwrap();
                             let t = mid_layers[0][0];
                         }
-                        tx.send(result)
+                        tx.send(img)
                     });
                 }
                 let results = (0..batch_size)
@@ -131,48 +130,4 @@ fn take_n_rand<'a, T>(vec: &'a Vec<T>, n: usize, rng: &mut rand::ThreadRng) -> V
     (0..n)
         .filter_map(|_| rng.choose(vec))
         .collect::<Vec<&'a T>>()
-}
-
-type Array2D<T, R, C> = GenericArray<GenericArray<T, C>, R>;
-fn convolution<T, R, C>(array: Array2D<T, R, C>) -> Array2D<GenericArray<T, U9>, R, C>
-    where T: Copy,
-          R: ArrayLength<GenericArray<T, C>> + ArrayLength<GenericArray<GenericArray<T, U9>, C>>,
-          C: ArrayLength<T> + ArrayLength<GenericArray<T, U9>>
-{
-    let mut result: Array2D<GenericArray<T, U9>, R, C>;
-    unsafe {
-        result = std::mem::uninitialized();
-        for row in 1..(R::to_usize() - 1) {
-            for col in 1..(C::to_usize() - 1) {
-                for r_k in 0..2 {
-                    for c_k in 0..2 {
-                        result[row][col][c_k + r_k * 3] = array[row + r_k - 1][col + c_k - 1];
-                    }
-                }
-            }
-        }
-    }
-    result
-}
-
-fn som_dist<T,K, N, R,C>(img :&Array2D<T,R,C>,csomcell:&GenericArray<T,U9>,row:usize,col:usize)->T
-where T: Copy+num::Float+From<f32>,
-     K: ArrayLength<T> ,
-     N: ArrayLength<GenericArray<T, K>>,
-          R: ArrayLength<GenericArray<T, C>>,
-          C: ArrayLength<T>
-{
-    let img_cell = &[
-        &img[row][col..(col+2)],
-        &img[row+1][col..(col+2)],
-        &img[row+2][col..(col+2)]
-    ];
-    let mut c:T = num::zero();
-    for row in 0..3{
-        for col in 0..3{
-            let index = col + row*3;
-            c = c + num::pow((img[row][col] - csomcell[index]),2);
-        }
-    }
-    T::sqrt(c.into()).into()
 }
