@@ -4,7 +4,7 @@ extern crate generic_array;
 extern crate num;
 use std;
 use imgdata::Image;
-use imgdata::ImgData;
+//use imgdata::ImgData;
 use dataset::DataSet;
 
 use self::generic_array::{ArrayLength, GenericArray};
@@ -39,7 +39,7 @@ impl<T, K, S> CsomLayerTrait for CsomLayer<T, K, S>
 }
 
 #[derive(Debug)]
-struct CSomBase<T, K, L, N, M>
+pub struct CSomBase<T, K, L, N, M>
     where T: Sized,
           K: ArrayLength<T>,
           L: ArrayLength<CsomLayer<T, K, N>>,
@@ -94,7 +94,7 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
                         let csom = self.clone();
                          std::thread::spawn(move || {
                         let x = x.load_img() as Image<T,U32,U32>;
-                        let result = convolution(x);
+                        let _ = convolution(x);
                         let t = csom.mid_layers[0].lock().unwrap()[0][0].clone();
                         tx.send(t)
                     })
@@ -114,7 +114,7 @@ impl<T, K, L, N, M> CSomTrait<T, K, L, N, M> for CSom<T, K, L, N, M>
             })
             .map(|_| rx2.recv().expect("Thread Error!"))
             .count();
-                println!("{}, {}", i, self.mid_layers[0].lock().unwrap()[0][0]);
+                println!("{}, {}, {}", n,i, self.mid_layers[0].lock().unwrap()[0][0]);
         }
     }
 }
