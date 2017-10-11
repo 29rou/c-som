@@ -4,17 +4,6 @@ version = "0.1.0"
 authors = ["29rou <g196010r@icu.ac.jp>"]
 
 [dependencies]
-<<<<<<< HEAD
-=======
-image = "0.14.0"
-walkdir ="1"
-rand = "0.3"
-generic-array = "0.8.2"
-typenum = "1.9.0"
-num = "0.1.40"
-crossbeam = "0.2.10"
-
->>>>>>> convolution
 
 # The development profile, used for `cargo build`.
 [profile.dev]
