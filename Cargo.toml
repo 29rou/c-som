@@ -55,8 +55,4 @@ rpath = false
 lto = false
 debug-assertions = true
 codegen-units = 1
-<<<<<<< HEAD
 panic = 'unwind'
-=======
-panic = 'unwind'
->>>>>>> convolution
