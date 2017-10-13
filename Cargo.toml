@@ -5,6 +5,7 @@ authors = ["29rou <g196010r@icu.ac.jp>"]
 
 [dependencies]
 walkdir = "1.0.7"
+image = "*"
 
 # The development profile, used for `cargo build`.
 [profile.dev]
