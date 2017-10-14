@@ -1,6 +1,7 @@
 extern crate walkdir;
 extern crate image;
 extern crate rand;
+extern crate itertools;
 
 use std;
 use std::collections::LinkedList;
@@ -35,6 +36,7 @@ impl CifarDataset{
     }
     fn get_meta_data(paths: &LinkedList<std::path::PathBuf>) -> Vec<String>{
         use std::io::Read;
+        use self::itertools::Itertools;
         paths.iter()
             .filter(|x| x.extension().expect("Can't Find MetaFile!!")=="txt")
             .map(|meta_path| ->String{
@@ -49,15 +51,13 @@ impl CifarDataset{
                 lines.lines()
                     .map(|x| x.to_string())
                     .filter(|x| !x.is_empty())
-                    .collect::<Vec<String>>()
+                    .collect_vec()
             })
-            .fold(Vec::new(),|mut sum,ref mut labels| -> Vec<String>{
-                sum.append(labels);
-                sum
-            })
+            .concat()
     }
     fn get_byte_datas(paths: &LinkedList<std::path::PathBuf>) -> Vec<Vec<u8>>{
         use std::io::{BufReader, Read};
+        use self::itertools::Itertools;
         paths.iter()
             .filter(|x| x.extension().expect("Can't Find Bin File!!")=="bin")
             .map(|x| -> Vec<u8>{
@@ -69,12 +69,9 @@ impl CifarDataset{
                 binaray_data
             })
             .map(|x| -> Vec<Vec<u8>>{
-                x.chunks(3073).map(|x| x.to_vec()).collect()
+                x.chunks(3073).map(|x| x.to_vec()).collect_vec()
             })
-            .fold(Vec::new(),|mut sum,ref mut x| -> Vec<Vec<u8>>{
-                sum.append(x);
-                sum
-            })
+            .concat()
     }
     fn get_images(byte_datas: Vec<Vec<u8>>) -> Vec<CifarImage>{
         byte_datas
@@ -106,6 +103,7 @@ impl CifarImage{
         use std::io::Read;
         use std::mem;
         use self::image::GenericImage;
+        use self::itertools::Itertools;
         let ref mut bytes:&[u8] = bytes.as_ref();
         let label = unsafe{
             let ref mut label:[u8;1] = mem::uninitialized();
@@ -120,18 +118,16 @@ impl CifarImage{
             bytes.read_exact(red).expect("Can't Read Red!!");
             bytes.read_exact(green).expect("Can't Read Green!!");
             bytes.read_exact(blue).expect("Can't Read Blue!!");
-            for y in 0..32{
-                for x in 0..32{
-                    let i = x + y * 32;
-                    let ref mut pixel:image::Rgba<u8> = mem::uninitialized();
-                    pixel.data = [
-                        *red.get_unchecked(i),
-                        *green.get_unchecked(i),
-                        *blue.get_unchecked(i),
-                        255
-                    ];
-                    img.unsafe_put_pixel(x as u32 ,y as u32 ,*pixel);
-                }
+            for (x,y) in (0..32).cartesian_product((0..32)){
+                let i = x + y * 32;
+                let ref mut pixel:image::Rgba<u8> = mem::uninitialized();
+                pixel.data = [
+                    *red.get_unchecked(i),
+                    *green.get_unchecked(i),
+                    *blue.get_unchecked(i),
+                    255
+                ];
+                img.unsafe_put_pixel(x as u32 ,y as u32 ,*pixel);
             }
             img
         };
