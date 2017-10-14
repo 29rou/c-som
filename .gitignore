@@ -3,3 +3,4 @@ target/
 rls.toml
 cifar-10-batches-bin/
 *.png
+*.jpeg
