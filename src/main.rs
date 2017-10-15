@@ -13,9 +13,8 @@ lazy_static!{
         cifar::CifarDataset::new(path)
     };
 }
-
-fn main(){
+fn main() {
     let ref cifar_dataset = CIFARDATASET;
-    println!("Count:{}",cifar_dataset.count);
+    println!("Count:{}", cifar_dataset.count);
     cifar_dataset.for_test_get_image_by_save();
 }
