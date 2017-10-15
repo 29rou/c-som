@@ -32,12 +32,11 @@ impl CifarDataset {
         println!("{:?}", meta_data);
         let byte_datas: Vec<Vec<u8>> =
             CifarDataset::get_byte_datas(&binary_data_paths).map_err(|err| err.to_string())?;
-        let cifar_images: Vec<CifarImage> = CifarDataset::get_images(byte_datas).unwrap();
-        let count: usize = cifar_images.len();
+        let cifar_images: Vec<CifarImage> = CifarDataset::get_images(byte_datas)?;
         let cifar_dataset = CifarDataset {
             labels: meta_data,
+            count: cifar_images.len() as usize,
             dataset: cifar_images,
-            count: count,
         };
         Ok(cifar_dataset)
     }
@@ -129,7 +128,9 @@ impl CifarDataset {
                 std::thread::spawn(move || CifarImage::new(&byte_img))
             })
             .map(|img| -> Result<CifarImage, String> {
-                img.join().map_err(|_| "thread panicked".to_string())
+                img.join()
+                    .map_err(|_| "thread panicked".to_string())
+                    .map(|content| content.map_err(|err| err.to_string()))?
             })
             .collect::<Result<Vec<CifarImage>, String>>()
     }
@@ -149,7 +150,7 @@ impl CifarDataset {
 }
 
 impl CifarImage {
-    fn new(bytes: &[u8]) -> Self {
+    fn new(bytes: &[u8]) -> Result<Self, std::io::Error> {
         use std::io::Read;
         use std::mem;
         use self::image::GenericImage;
@@ -158,7 +159,7 @@ impl CifarImage {
         let bytes: &mut &[u8] = &mut bytes.as_ref();
         let label: u8 = unsafe {
             let label: &mut [u8; 1] = &mut mem::uninitialized();
-            bytes.read_exact(label).expect("Can't Read Label!!");
+            bytes.read_exact(label)?;
             *label.get_unchecked(0)
         };
         let img = unsafe {
@@ -166,9 +167,9 @@ impl CifarImage {
             let red: &mut [u8; 1024] = &mut mem::uninitialized();
             let green: &mut [u8; 1024] = &mut mem::uninitialized();
             let blue: &mut [u8; 1024] = &mut mem::uninitialized();
-            bytes.read_exact(red).expect("Can't Read Red!!");
-            bytes.read_exact(green).expect("Can't Read Green!!");
-            bytes.read_exact(blue).expect("Can't Read Blue!!");
+            bytes.read_exact(red)?;
+            bytes.read_exact(green)?;
+            bytes.read_exact(blue)?;
             multizip((
                 (0..32).cartesian_product(0..32),
                 red.iter(),
@@ -181,9 +182,9 @@ impl CifarImage {
             });
             img
         };
-        CifarImage {
+        Ok(CifarImage {
             label: label,
             image: img,
-        }
+        })
     }
 }
