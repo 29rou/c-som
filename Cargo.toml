@@ -9,6 +9,10 @@ image = "*"
 lazy_static = "0.2"
 rand = "0.3"
 itertools = "0.7.1"
+clippy = { version = "*", optional = true }
+
+[features]
+default = []
 
 # The development profile, used for `cargo build`.
 [profile.dev]

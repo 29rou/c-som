@@ -4,7 +4,6 @@ extern crate rand;
 extern crate walkdir;
 
 use std;
-use std::collections::LinkedList;
 
 pub struct CifarDataset {
     pub count: usize,
@@ -19,8 +18,9 @@ pub struct CifarImage {
 
 impl CifarDataset {
     pub fn new(path: &std::path::Path) -> Self {
-        let ref paths = CifarDataset::get_file_paths(path);
+        let paths = &CifarDataset::get_file_paths(path);
         let meta_data: Vec<String> = CifarDataset::get_meta_data(paths);
+        println!("{:?}", meta_data);
         let byte_datas: Vec<Vec<u8>> = CifarDataset::get_byte_datas(paths);
         let cifar_images: Vec<CifarImage> = CifarDataset::get_images(byte_datas);
         let count: usize = cifar_images.len();
@@ -30,14 +30,14 @@ impl CifarDataset {
             count: count,
         }
     }
-    fn get_file_paths(path: &std::path::Path) -> LinkedList<std::path::PathBuf> {
+    fn get_file_paths(path: &std::path::Path) -> Vec<std::path::PathBuf> {
         walkdir::WalkDir::new(path)
             .into_iter()
             .flat_map(|x| x.map(|x| x.path().to_path_buf()))
             .filter(|x| x.is_file())
-            .collect::<LinkedList<std::path::PathBuf>>()
+            .collect::<Vec<std::path::PathBuf>>()
     }
-    fn get_meta_data(paths: &LinkedList<std::path::PathBuf>) -> Vec<String> {
+    fn get_meta_data(paths: &[std::path::PathBuf]) -> Vec<String> {
         use std::io::Read;
         use self::itertools::Itertools;
         paths
@@ -56,13 +56,13 @@ impl CifarDataset {
             .map(|lines| -> Vec<String> {
                 lines
                     .lines()
-                    .map(|x| x.to_string())
                     .filter(|x| !x.is_empty())
+                    .map(|x| x.into())
                     .collect_vec()
             })
             .concat()
     }
-    fn get_byte_datas(paths: &LinkedList<std::path::PathBuf>) -> Vec<Vec<u8>> {
+    fn get_byte_datas(paths: &[std::path::PathBuf]) -> Vec<Vec<u8>> {
         use std::io::{BufReader, Read};
         use self::itertools::Itertools;
         paths
@@ -89,17 +89,17 @@ impl CifarDataset {
     fn get_images(byte_datas: Vec<Vec<u8>>) -> Vec<CifarImage> {
         byte_datas
             .into_iter()
-            .map(move |byte_img| {
+            .map(|byte_img| {
                 std::thread::spawn(move || CifarImage::new(&byte_img))
             })
             .map(|img| -> CifarImage { img.join().expect("Thread Error!!") })
-            .collect()
+            .collect::<Vec<CifarImage>>()
     }
     pub fn for_test_get_image_by_save(&self) {
         use self::rand::{thread_rng, Rng};
-        let ref nth: usize = thread_rng().gen_range(0, self.count);
-        let ref data: CifarImage = self.dataset[*nth];
-        let ref mut fout = std::fs::File::create(&std::path::Path::new("test.jpeg"))
+        let nth: &usize = &thread_rng().gen_range(0, self.count);
+        let data: &CifarImage = &self.dataset[*nth];
+        let fout = &mut std::fs::File::create(&std::path::Path::new("test.jpeg"))
             .expect("Can't Ready To Save Image!!");
         data.image
             .resize(500, 500, image::FilterType::Lanczos3)
@@ -110,28 +110,28 @@ impl CifarDataset {
 }
 
 impl CifarImage {
-    fn new(bytes: &Vec<u8>) -> Self {
+    fn new(bytes: &[u8]) -> Self {
         use std::io::Read;
         use std::mem;
         use self::image::GenericImage;
         use self::itertools::multizip;
         use self::itertools::Itertools;
-        let ref mut bytes: &[u8] = bytes.as_ref();
+        let bytes: &mut &[u8] = &mut bytes.as_ref();
         let label: u8 = unsafe {
-            let ref mut label: [u8; 1] = mem::uninitialized();
+            let label: &mut [u8; 1] = &mut mem::uninitialized();
             bytes.read_exact(label).expect("Can't Read Label!!");
             *label.get_unchecked(0)
         };
         let img = unsafe {
             let mut img = image::DynamicImage::new_rgb8(32, 32);
-            let ref mut red: [u8; 1024] = mem::uninitialized();
-            let ref mut green: [u8; 1024] = mem::uninitialized();
-            let ref mut blue: [u8; 1024] = mem::uninitialized();
+            let red: &mut [u8; 1024] = &mut mem::uninitialized();
+            let green: &mut [u8; 1024] = &mut mem::uninitialized();
+            let blue: &mut [u8; 1024] = &mut mem::uninitialized();
             bytes.read_exact(red).expect("Can't Read Red!!");
             bytes.read_exact(green).expect("Can't Read Green!!");
             bytes.read_exact(blue).expect("Can't Read Blue!!");
             multizip((
-                (0..32).cartesian_product((0..32)),
+                (0..32).cartesian_product(0..32),
                 red.iter(),
                 green.iter(),
                 blue.iter(),
