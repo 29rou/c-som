@@ -16,96 +16,135 @@ pub struct CifarImage {
     pub image: image::DynamicImage,
 }
 
+struct CifarFilePaths {
+    meta_data_paths: Vec<std::path::PathBuf>,
+    binary_data_paths: Vec<std::path::PathBuf>,
+}
+
 impl CifarDataset {
-    pub fn new(path: &std::path::Path) -> Self {
-        let paths = &CifarDataset::get_file_paths(path);
-        let meta_data: Vec<String> = CifarDataset::get_meta_data(paths);
+    pub fn new(path: &std::path::Path) -> Result<Self, String> {
+        let CifarFilePaths {
+            meta_data_paths,
+            binary_data_paths,
+        } = CifarDataset::get_file_paths(path).ok_or("Can't Find Files!!")?;
+        let meta_data: Vec<String> =
+            CifarDataset::get_meta_data(&meta_data_paths).map_err(|err| err.to_string())?;
         println!("{:?}", meta_data);
-        let byte_datas: Vec<Vec<u8>> = CifarDataset::get_byte_datas(paths);
-        let cifar_images: Vec<CifarImage> = CifarDataset::get_images(byte_datas);
+        let byte_datas: Vec<Vec<u8>> =
+            CifarDataset::get_byte_datas(&binary_data_paths).map_err(|err| err.to_string())?;
+        let cifar_images: Vec<CifarImage> = CifarDataset::get_images(byte_datas).unwrap();
         let count: usize = cifar_images.len();
-        CifarDataset {
+        let cifar_dataset = CifarDataset {
             labels: meta_data,
             dataset: cifar_images,
             count: count,
-        }
+        };
+        Ok(cifar_dataset)
     }
-    fn get_file_paths(path: &std::path::Path) -> Vec<std::path::PathBuf> {
-        walkdir::WalkDir::new(path)
+    fn get_file_paths(path: &std::path::Path) -> Option<CifarFilePaths> {
+        let paths = &walkdir::WalkDir::new(path)
             .into_iter()
             .flat_map(|x| x.map(|x| x.path().to_path_buf()))
             .filter(|x| x.is_file())
-            .collect::<Vec<std::path::PathBuf>>()
+            .collect::<Vec<std::path::PathBuf>>();
+        let meta_data_paths = CifarDataset::find_file_paths_by_ext(paths, "txt");
+        let binary_data_paths = CifarDataset::find_file_paths_by_ext(paths, "bin");
+        match (meta_data_paths, binary_data_paths) {
+            (Some(meta), Some(binary)) => Some(CifarFilePaths {
+                meta_data_paths: meta,
+                binary_data_paths: binary,
+            }),
+            _ => None,
+        }
     }
-    fn get_meta_data(paths: &[std::path::PathBuf]) -> Vec<String> {
+    fn find_file_paths_by_ext(
+        paths: &[std::path::PathBuf],
+        ext: &str,
+    ) -> Option<Vec<std::path::PathBuf>> {
+        let fpaths: Vec<std::path::PathBuf> = paths
+            .iter()
+            .filter(|path| -> bool {
+                match path.extension() {
+                    Some(p) => p == ext,
+                    None => false,
+                }
+            })
+            .cloned()
+            .collect();
+        if fpaths.is_empty() {
+            None
+        } else {
+            Some(fpaths)
+        }
+    }
+    fn get_meta_data(paths: &[std::path::PathBuf]) -> Result<Vec<String>, std::io::Error> {
         use std::io::Read;
         use self::itertools::Itertools;
         paths
             .iter()
-            .filter(|path| {
-                path.extension().expect("Can't Find MetaFile!!") == "txt"
+            .map(|meta_path| -> Result<String, std::io::Error> {
+                std::fs::File::open(meta_path).and_then(|mut file| {
+                    let mut contents = String::new();
+                    file.read_to_string(&mut contents).map(|_| contents)
+                })
             })
-            .map(|meta_path| -> String {
-                let mut lines = String::new();
-                std::fs::File::open(meta_path)
-                    .expect("Cant Open MetaFile!!")
-                    .read_to_string(&mut lines)
-                    .expect("Cant Read MetaFile!!");
-                lines
+            .map(|lines| -> Result<Vec<String>, std::io::Error> {
+                lines.map(|l| -> Vec<String> {
+                    l.lines()
+                        .filter(|x| !x.is_empty())
+                        .map(|x| x.into())
+                        .collect_vec()
+                })
             })
-            .map(|lines| -> Vec<String> {
-                lines
-                    .lines()
-                    .filter(|x| !x.is_empty())
-                    .map(|x| x.into())
-                    .collect_vec()
-            })
-            .concat()
+            .collect::<Result<Vec<Vec<String>>, std::io::Error>>()
+            .map(|v| v.concat())
     }
-    fn get_byte_datas(paths: &[std::path::PathBuf]) -> Vec<Vec<u8>> {
+    fn get_byte_datas(paths: &[std::path::PathBuf]) -> Result<Vec<Vec<u8>>, std::io::Error> {
         use std::io::{BufReader, Read};
         use self::itertools::Itertools;
         paths
             .iter()
-            .filter(|path| {
-                path.extension().expect("Can't Find Bin File!!") == "bin"
+            .map(|file_path| -> Result<Vec<u8>, std::io::Error> {
+                std::fs::File::open(file_path).and_then(|file| {
+                    let mut byte_data: Vec<u8> = Vec::new();
+                    BufReader::new(file)
+                        .read_to_end(&mut byte_data)
+                        .map(|_| byte_data)
+                })
             })
-            .map(|file_path| -> Vec<u8> {
-                let file = std::fs::File::open(file_path).expect("Can't Open Bin File!!");
-                let mut byte_data: Vec<u8> = Vec::new();
-                BufReader::new(file)
-                    .read_to_end(&mut byte_data)
-                    .expect("Can't Read Bin File!!");
-                byte_data
+            .map(|byte_data| -> Result<Vec<Vec<u8>>, std::io::Error> {
+                byte_data.map(|b| -> Vec<Vec<u8>> {
+                    b.chunks(3073)
+                        .map(|byte_img| -> Vec<u8> { byte_img.to_vec() })
+                        .collect_vec()
+                })
             })
-            .map(|byte_data| -> Vec<Vec<u8>> {
-                byte_data
-                    .chunks(3073)
-                    .map(|byte_img| -> Vec<u8> { byte_img.to_vec() })
-                    .collect_vec()
-            })
-            .concat()
+            .collect::<Result<Vec<Vec<Vec<u8>>>, std::io::Error>>()
+            .map(|v| v.concat())
     }
-    fn get_images(byte_datas: Vec<Vec<u8>>) -> Vec<CifarImage> {
+    fn get_images(byte_datas: Vec<Vec<u8>>) -> Result<Vec<CifarImage>, String> {
         byte_datas
             .into_iter()
             .map(|byte_img| {
                 std::thread::spawn(move || CifarImage::new(&byte_img))
             })
-            .map(|img| -> CifarImage { img.join().expect("Thread Error!!") })
-            .collect::<Vec<CifarImage>>()
+            .map(|img| -> Result<CifarImage, String> {
+                img.join().map_err(|_| "thread panicked".to_string())
+            })
+            .collect::<Result<Vec<CifarImage>, String>>()
     }
-    pub fn for_test_get_image_by_save(&self) {
+    pub fn for_test_get_image_by_save(&self) -> Result<(), String> {
         use self::rand::{thread_rng, Rng};
+        let fout = &mut std::fs::File::create(&std::path::Path::new("test.jpeg"))
+            .map_err(|err| err.to_string())?;
         let nth: &usize = &thread_rng().gen_range(0, self.count);
         let data: &CifarImage = &self.dataset[*nth];
-        let fout = &mut std::fs::File::create(&std::path::Path::new("test.jpeg"))
-            .expect("Can't Ready To Save Image!!");
         data.image
             .resize(500, 500, image::FilterType::Lanczos3)
             .save(fout, image::JPEG)
-            .expect("Can't Save Image!!");
+            .map_err(|err| err.to_string())?;
         println!("No.{} {}", nth, self.labels[data.label as usize]);
+        Ok(())
     }
 }
 

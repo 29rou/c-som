@@ -10,11 +10,11 @@ lazy_static!{
         //let args = &std::env::args().collect::<Vec<String>>();
         const PATH: &str = "./cifar-10-batches-bin/";
         let path:&std::path::Path = std::path::Path::new(PATH);
-        cifar::CifarDataset::new(path)
+        cifar::CifarDataset::new(path).unwrap()
     };
 }
 fn main() {
     let cifar_dataset = &CIFARDATASET;
     println!("Count:{}", cifar_dataset.count);
-    cifar_dataset.for_test_get_image_by_save();
+    cifar_dataset.for_test_get_image_by_save().unwrap();
 }
