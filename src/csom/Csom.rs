@@ -1,16 +1,17 @@
 extern crate rand;
 
 pub struct Csom {
-    som_layers: ::csom::som::SomLayers,
-    fully_connected_layers: ::csom::fc::fully_connected_layers,
+    pub som_layers: ::csom::som::SomLayers,
+    pub fully_connected_layers: ::csom::fc::FullyConnectedLayers,
 }
 
 impl Csom {
     pub fn new(rng: &mut rand::ThreadRng) -> Self {
-        let csom: Csom = unsafe {
-            let csom: Csom = ::std::mem::uninitialized();
-            csom
-        };
-        csom
+        let som_layers = ::csom::som::SomLayersTrait::new(rng);
+        let fully_connected_layers = ::csom::fc::FullyConnectedLayers::new(rng);
+        Csom {
+            som_layers: som_layers,
+            fully_connected_layers: fully_connected_layers,
+        }
     }
 }

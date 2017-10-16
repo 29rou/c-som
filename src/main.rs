@@ -22,4 +22,5 @@ fn main() {
     cifar_dataset.for_test_get_image_by_save().unwrap();
     let rng = &mut rand::thread_rng();
     let csom = csom::Csom::Csom::new(rng);
+    println!("{:?}", csom.fully_connected_layers.layer1[0])
 }

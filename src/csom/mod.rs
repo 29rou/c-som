@@ -1,3 +1,5 @@
+#[macro_use]
+mod rnd;
 pub mod Csom;
 mod som;
-mod fc;
+pub mod fc;
