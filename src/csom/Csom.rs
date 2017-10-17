@@ -7,11 +7,28 @@ pub struct Csom {
 
 impl Csom {
     pub fn new(rng: &mut rand::ThreadRng) -> Self {
-        let som_layers = ::csom::som::SomLayersTrait::new(rng);
-        let fully_connected_layers = ::csom::fc::FullyConnectedLayers::new(rng);
+        use csom::som::SomLayersTrait;
+        use csom::fc::FullyConnectedLayers;
         Csom {
-            som_layers: som_layers,
-            fully_connected_layers: fully_connected_layers,
+            som_layers: SomLayersTrait::new(rng),
+            fully_connected_layers: FullyConnectedLayers::new(rng),
         }
+    }
+    pub fn train(
+        &self,
+        cifar_dataset: &::cifar::dataset::CifarDataset,
+        rng: &mut rand::ThreadRng,
+    ) -> &Self {
+        self
+    }
+    pub fn test(
+        &self,
+        cifar_test_dataset: &::cifar::dataset::CifarDataset,
+        rng: &mut rand::ThreadRng,
+    ) -> &Self {
+        self
+    }
+    pub fn save(&self) -> Result<&Self, String> {
+        Ok(self)
     }
 }

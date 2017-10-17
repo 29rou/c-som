@@ -15,7 +15,7 @@ impl SomLayerTrait for SomLayer {
             let mut somlayer: SomLayer = ::std::mem::uninitialized();
             (0..somlayer.len())
                 .cartesian_product(0..somlayer[0].len())
-                .for_each(|(y, x)| somlayer[y][x] = rand_0_255!(rng));
+                .for_each(|(y, x)| somlayer[y][x] = rand_0_255!(rng) as f32);
             somlayer
         }
     }

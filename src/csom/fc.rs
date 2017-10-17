@@ -1,42 +1,47 @@
 extern crate itertools;
 extern crate rand;
 
+macro_rules!  for_fully_connected_layer_init{
+    ($layer:ident : $T:ty ,$rng:ident) => {
+        {
+        use self::itertools::Itertools;
+        (0..$layer.len())
+                .cartesian_product(0..$layer[0].len())
+               .for_each(|(y, x)| $layer[y][x] = rand_0_1!($rng) as $T);
+        }
+    };
+}
+
+
+
 pub struct FullyConnectedLayers {
     pub layer1: [[f32; 16]; 16],
-    layer2: [[f32; 16]; 16],
-    layer3: [[f32; 10]; 16],
-    layer4: [[f32; 10]; 10],
+    pub layer2: [[f32; 16]; 16],
+    pub layer3: [[f32; 10]; 16],
+    pub layer4: [[f32; 10]; 10],
 }
 
 impl FullyConnectedLayers {
     pub fn new(rng: &mut rand::ThreadRng) -> Self {
-        use self::itertools::Itertools;
-        let layer1: [[f32; 16]; 16] = unsafe {
-            let mut layer: [[f32; 16]; 16] = ::std::mem::uninitialized();
-            (0..layer.len())
-                .cartesian_product(0..layer[0].len())
-                .for_each(|(y, x)| layer[y][x] = rand_0_255!(rng));
+        use std::mem::uninitialized;
+        let layer1 = unsafe {
+            let mut layer: [[f32; 16]; 16] = uninitialized();
+            for_fully_connected_layer_init!(layer: f32, rng);
             layer
         };
-        let layer2: [[f32; 16]; 16] = unsafe {
-            let mut layer: [[f32; 16]; 16] = ::std::mem::uninitialized();
-            (0..layer.len())
-                .cartesian_product(0..layer[0].len())
-                .for_each(|(y, x)| layer[y][x] = rand_0_255!(rng));
+        let layer2 = unsafe {
+            let mut layer: [[f32; 16]; 16] = uninitialized();
+            for_fully_connected_layer_init!(layer: f32, rng);
             layer
         };
-        let layer3: [[f32; 10]; 16] = unsafe {
-            let mut layer: [[f32; 10]; 16] = ::std::mem::uninitialized();
-            (0..layer.len())
-                .cartesian_product(0..layer[0].len())
-                .for_each(|(y, x)| layer[y][x] = rand_0_255!(rng));
+        let layer3 = unsafe {
+            let mut layer: [[f32; 10]; 16] = uninitialized();
+            for_fully_connected_layer_init!(layer: f32, rng);
             layer
         };
-        let layer4: [[f32; 10]; 10] = unsafe {
-            let mut layer: [[f32; 10]; 10] = ::std::mem::uninitialized();
-            (0..layer.len())
-                .cartesian_product(0..layer[0].len())
-                .for_each(|(y, x)| layer[y][x] = rand_0_255!(rng));
+        let layer4 = unsafe {
+            let mut layer: [[f32; 10]; 10] = uninitialized();
+            for_fully_connected_layer_init!(layer: f32, rng);
             layer
         };
         FullyConnectedLayers {

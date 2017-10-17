@@ -17,10 +17,12 @@ lazy_static!{
     };
 }
 fn main() {
+    //use csom::Csom::Csom;
     let cifar_dataset = &CIFARDATASET;
     println!("Count:{}", cifar_dataset.count);
     cifar_dataset.for_test_get_image_by_save().unwrap();
     let rng = &mut rand::thread_rng();
     let csom = csom::Csom::Csom::new(rng);
+    csom.train(cifar_dataset, rng);
     println!("{:?}", csom.fully_connected_layers.layer1[0])
 }

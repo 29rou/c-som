@@ -1,69 +1,63 @@
 [package]
+authors = ["29rou <g196010r@icu.ac.jp>"]
 name = "c-som"
 version = "0.1.0"
-authors = ["29rou <g196010r@icu.ac.jp>"]
 
 [dependencies]
-walkdir = "1.0.7"
-image = "*"
-lazy_static = "0.2"
-rand = "0.3"
+image = "0.17.0"
 itertools = "0.7.1"
-clippy = { version = "*", optional = true }
-generic-array = "0.9.0"
-typenum = "1.9.0"
+lazy_static = "0.2.9"
+num = "0.1.40"
+rand = "0.3.17"
+walkdir = "1.0.7"
+
+[dependencies.clippy]
+optional = true
+version = "0.0.165"
 
 [features]
 default = []
-
-# The development profile, used for `cargo build`.
-[profile.dev]
-opt-level = 0      # controls the `--opt-level` the compiler builds with
-debug = true       # controls whether the compiler passes `-C debuginfo`
-                   # a value of `true` is equivalent to `2`
-rpath = false      # controls whether the compiler passes `-C rpath`
-lto = false        # controls `-C lto` for binaries and staticlibs
-debug-assertions = true # controls whether debug assertions are enabled
-codegen-units = 1  # controls whether the compiler passes `-C codegen-units`
-                   # `codegen-units` is ignored when `lto = true`
-panic = 'unwind'   # panic strategy (`-C panic=...`), can also be 'abort'
-
-# The release profile, used for `cargo build --release`.
-[profile.release]
-opt-level = 3
-debug = false
-rpath = false
-lto = false
-debug-assertions = false
-codegen-units = 1
-panic = 'unwind'
-
-# The testing profile, used for `cargo test`.
-[profile.test]
-opt-level = 0
-debug = 2
-rpath = false
-lto = false
-debug-assertions = true
-codegen-units = 1
-panic = 'unwind'
-
-# The benchmarking profile, used for `cargo bench`.
 [profile.bench]
-opt-level = 3
+codegen-units = 1
 debug = false
-rpath = false
-lto = false
 debug-assertions = false
-codegen-units = 1
-panic = 'unwind'
-
-# The documentation profile, used for `cargo doc`.
-[profile.doc]
-opt-level = 0
-debug = 2
-rpath = false
 lto = false
-debug-assertions = true
+opt-level = 3
+panic = "unwind"
+rpath = false
+
+[profile.dev]
 codegen-units = 1
-panic = 'unwind'
+debug = true
+debug-assertions = true
+lto = false
+opt-level = 0
+panic = "unwind"
+rpath = false
+
+[profile.doc]
+codegen-units = 1
+debug = 2
+debug-assertions = true
+lto = false
+opt-level = 0
+panic = "unwind"
+rpath = false
+
+[profile.release]
+codegen-units = 1
+debug = false
+debug-assertions = false
+lto = false
+opt-level = 3
+panic = "unwind"
+rpath = false
+
+[profile.test]
+codegen-units = 1
+debug = 2
+debug-assertions = true
+lto = false
+opt-level = 0
+panic = "unwind"
+rpath = false
