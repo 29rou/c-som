@@ -1,73 +1,105 @@
 extern crate image;
 extern crate itertools;
 extern crate rand;
+extern crate regex;
 extern crate walkdir;
 
-
 pub struct CifarDataset {
-    pub count: usize,
     pub labels: Vec<String>,
-    pub dataset: Vec<::cifar::image::CifarImage>,
+    pub train_count: usize,
+    pub test_count: usize,
+    pub train_dataset: Vec<::cifar::image::CifarImage>,
+    pub test_dataset: Vec<::cifar::image::CifarImage>,
 }
 
 struct CifarFilePaths {
     meta_data_paths: Vec<::std::path::PathBuf>,
-    binary_data_paths: Vec<::std::path::PathBuf>,
+    train_data_paths: Vec<::std::path::PathBuf>,
+    test_data_paths: Vec<::std::path::PathBuf>,
 }
 
 impl CifarDataset {
     pub fn new(path: &::std::path::Path) -> Result<Self, String> {
         let CifarFilePaths {
             meta_data_paths,
-            binary_data_paths,
-        } = CifarDataset::get_file_paths(path).ok_or("Can't Find Files!!")?;
+            train_data_paths,
+            test_data_paths,
+        } = CifarDataset::get_file_paths(path)?;
         let meta_data: Vec<String> =
             CifarDataset::get_meta_data(&meta_data_paths).map_err(|err| err.to_string())?;
         println!("{:?}", meta_data);
-        let byte_datas: Vec<Vec<u8>> =
-            CifarDataset::get_byte_datas(&binary_data_paths).map_err(|err| err.to_string())?;
-        let cifar_images: Vec<::cifar::image::CifarImage> = CifarDataset::get_images(byte_datas)?;
+        let train_images: Vec<::cifar::image::CifarImage> = {
+            let byte_datas: Vec<Vec<u8>> =
+                CifarDataset::get_byte_datas(&train_data_paths).map_err(|err| err.to_string())?;
+            CifarDataset::get_images(byte_datas)?
+        };
+        let test_images: Vec<::cifar::image::CifarImage> = {
+            let byte_datas: Vec<Vec<u8>> =
+                CifarDataset::get_byte_datas(&test_data_paths).map_err(|err| err.to_string())?;
+            CifarDataset::get_images(byte_datas)?
+        };
         let cifar_dataset = CifarDataset {
             labels: meta_data,
-            count: cifar_images.len() as usize,
-            dataset: cifar_images,
+            train_count: train_images.len() as usize,
+            train_dataset: train_images,
+            test_count: test_images.len() as usize,
+            test_dataset: test_images,
         };
         Ok(cifar_dataset)
     }
-    fn get_file_paths(path: &::std::path::Path) -> Option<CifarFilePaths> {
+    fn get_file_paths(path: &::std::path::Path) -> Result<CifarFilePaths, String> {
         let paths = &walkdir::WalkDir::new(path)
             .into_iter()
             .flat_map(|x| x.map(|x| x.path().to_path_buf()))
             .filter(|x| x.is_file())
             .collect::<Vec<::std::path::PathBuf>>();
-        let meta_data_paths = CifarDataset::find_file_paths_by_ext(paths, "txt");
-        let binary_data_paths = CifarDataset::find_file_paths_by_ext(paths, "bin");
-        match (meta_data_paths, binary_data_paths) {
-            (Some(meta), Some(binary)) => Some(CifarFilePaths {
-                meta_data_paths: meta,
-                binary_data_paths: binary,
-            }),
-            _ => None,
-        }
+        let train_data_path_re =
+            regex::Regex::new("data_batch_[1-5].bin").map_err(|err| err.to_string())?;
+        let test_data_path_re = regex::Regex::new("test_batch.bin").map_err(|err| err.to_string())?;
+        let cifar_file_paths = CifarFilePaths {
+            meta_data_paths: CifarDataset::get_meta_data_paths(paths)?,
+            train_data_paths: CifarDataset::get_paths_regex(paths, &train_data_path_re)?,
+            test_data_paths: CifarDataset::get_paths_regex(paths, &test_data_path_re)?,
+        };
+        Ok(cifar_file_paths)
     }
-    fn find_file_paths_by_ext(
+    fn get_meta_data_paths(
         paths: &[::std::path::PathBuf],
-        ext: &str,
-    ) -> Option<Vec<::std::path::PathBuf>> {
+    ) -> Result<Vec<::std::path::PathBuf>, String> {
+        let meta_data_file_name = ::std::path::Path::new("batches.meta.txt");
         let fpaths: Vec<::std::path::PathBuf> = paths
             .iter()
-            .filter(|path| -> bool {
-                match path.extension() {
-                    Some(p) => p == ext,
-                    None => false,
-                }
+            .filter(|path| {
+                path.file_name()
+                    .map(|file_name| file_name == meta_data_file_name)
+                    .unwrap_or(false)
             })
             .cloned()
             .collect();
         if fpaths.is_empty() {
-            None
+            Err("Can't Find Meta Data Files!!".to_string())
         } else {
-            Some(fpaths)
+            Ok(fpaths)
+        }
+    }
+    fn get_paths_regex(
+        paths: &[::std::path::PathBuf],
+        re: &self::regex::Regex,
+    ) -> Result<Vec<::std::path::PathBuf>, String> {
+        let fpaths: Vec<::std::path::PathBuf> = paths
+            .iter()
+            .filter(|path| {
+                path.file_name()
+                    .map(|file_name| file_name.to_string_lossy())
+                    .map(|file_name| re.is_match(file_name.as_ref()))
+                    .unwrap_or(false)
+            })
+            .cloned()
+            .collect();
+        if fpaths.is_empty() {
+            Err("Can't Find Train Data Files!!".to_string())
+        } else {
+            Ok(fpaths)
         }
     }
     fn get_meta_data(paths: &[::std::path::PathBuf]) -> Result<Vec<String>, ::std::io::Error> {
@@ -132,8 +164,8 @@ impl CifarDataset {
         use self::rand::{thread_rng, Rng};
         let fout = &mut ::std::fs::File::create(&::std::path::Path::new("test.jpeg"))
             .map_err(|err| err.to_string())?;
-        let nth: &usize = &thread_rng().gen_range(0, self.count);
-        let data: &::cifar::image::CifarImage = &self.dataset[*nth];
+        let nth: &usize = &thread_rng().gen_range(0, self.train_count);
+        let data: &::cifar::image::CifarImage = &self.train_dataset[*nth];
         data.image
             .resize(500, 500, image::FilterType::Lanczos3)
             .save(fout, image::JPEG)

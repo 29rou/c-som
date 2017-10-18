@@ -9,6 +9,7 @@ itertools = "0.7.1"
 lazy_static = "0.2.9"
 num = "0.1.40"
 rand = "0.3.17"
+regex = "0.2.2"
 walkdir = "1.0.7"
 
 [dependencies.clippy]

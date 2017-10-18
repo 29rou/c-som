@@ -19,7 +19,8 @@ lazy_static!{
 fn main() {
     //use csom::Csom::Csom;
     let cifar_dataset = &CIFARDATASET;
-    println!("Count:{}", cifar_dataset.count);
+    println!("Test Data Count: {}", cifar_dataset.test_count);
+    println!("Train Data Count:{}", cifar_dataset.train_count);
     cifar_dataset.for_test_get_image_by_save().unwrap();
     let rng = &mut rand::thread_rng();
     let csom = csom::Csom::Csom::new(rng);
