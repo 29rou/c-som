@@ -1,6 +1,7 @@
 extern crate image;
 extern crate itertools;
 extern crate rand;
+extern crate rayon;
 extern crate regex;
 extern crate walkdir;
 
@@ -20,31 +21,36 @@ struct CifarFilePaths {
 
 impl CifarDataset {
     pub fn new(path: &::std::path::Path) -> Result<Self, String> {
+        use std::thread::spawn;
         let CifarFilePaths {
             meta_data_paths,
             train_data_paths,
             test_data_paths,
         } = CifarDataset::get_file_paths(path)?;
-        let meta_data: Vec<String> =
-            CifarDataset::get_meta_data(&meta_data_paths).map_err(|err| err.to_string())?;
-        let train_images: Vec<::cifar::image::CifarImage> = {
-            let byte_datas: Vec<Vec<u8>> =
-                CifarDataset::get_byte_datas(&train_data_paths).map_err(|err| err.to_string())?;
-            CifarDataset::get_images(byte_datas)?
-        };
-        let test_images: Vec<::cifar::image::CifarImage> = {
-            let byte_datas: Vec<Vec<u8>> =
-                CifarDataset::get_byte_datas(&test_data_paths).map_err(|err| err.to_string())?;
-            CifarDataset::get_images(byte_datas)?
-        };
+        let meta_data_handle = spawn(move || CifarDataset::get_meta_data(&meta_data_paths));
+        let train_images_handle = spawn(move || {
+            CifarDataset::get_images(CifarDataset::get_byte_datas(&train_data_paths)?)
+        });
+        let test_images_handle = spawn(move || {
+            CifarDataset::get_images(CifarDataset::get_byte_datas(&test_data_paths)?)
+        });
+        let train_images = CifarDataset::for_cifardataset_join_thread(train_images_handle)?;
+        let test_images = CifarDataset::for_cifardataset_join_thread(test_images_handle)?;
         let cifar_dataset = CifarDataset {
-            labels: meta_data,
+            labels: CifarDataset::for_cifardataset_join_thread(meta_data_handle)?,
             train_count: train_images.len() as usize,
             train_dataset: train_images,
             test_count: test_images.len() as usize,
             test_dataset: test_images,
         };
         Ok(cifar_dataset)
+    }
+    fn for_cifardataset_join_thread<T>(
+        p: ::std::thread::JoinHandle<Result<T, ::std::io::Error>>,
+    ) -> Result<T, String> {
+        p.join()
+            .map(|content| content.map_err(|err| err.to_string()))
+            .map_err(|_| "thread panicked".to_string())?
     }
     fn get_file_paths(path: &::std::path::Path) -> Result<CifarFilePaths, String> {
         use self::regex::Regex;
@@ -150,18 +156,14 @@ impl CifarDataset {
             .collect::<Result<Vec<Vec<Vec<u8>>>, ::std::io::Error>>()
             .map(|v| v.concat())
     }
-    fn get_images(byte_datas: Vec<Vec<u8>>) -> Result<Vec<::cifar::image::CifarImage>, String> {
+    fn get_images(
+        byte_datas: Vec<Vec<u8>>,
+    ) -> Result<Vec<::cifar::image::CifarImage>, ::std::io::Error> {
+        use self::rayon::prelude::*;
         byte_datas
-            .into_iter()
-            .map(|byte_img| {
-                ::std::thread::spawn(move || ::cifar::image::CifarImage::new(&byte_img))
-            })
-            .map(|img| -> Result<::cifar::image::CifarImage, String> {
-                img.join()
-                    .map_err(|_| "thread panicked".to_string())
-                    .map(|content| content.map_err(|err| err.to_string()))?
-            })
-            .collect::<Result<Vec<::cifar::image::CifarImage>, String>>()
+            .into_par_iter()
+            .map(|byte_img| ::cifar::image::CifarImage::new(&byte_img))
+            .collect::<Result<Vec<::cifar::image::CifarImage>, ::std::io::Error>>()
     }
     pub fn for_test_get_image_from_train_save(
         &self,
