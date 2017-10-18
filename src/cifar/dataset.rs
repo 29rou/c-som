@@ -167,7 +167,7 @@ impl CifarDataset {
         &self,
         rng: &mut rand::ThreadRng,
     ) -> Result<(), String> {
-        use self::rand::{thread_rng, Rng};
+        use self::rand::Rng;
         let fout = &mut ::std::fs::File::create(&::std::path::Path::new("train.jpeg"))
             .map_err(|err| err.to_string())?;
         let nth: &usize = &rng.gen_range(0, self.train_count);
@@ -183,7 +183,7 @@ impl CifarDataset {
         &self,
         rng: &mut rand::ThreadRng,
     ) -> Result<(), String> {
-        use self::rand::{thread_rng, Rng};
+        use self::rand::Rng;
         let fout = &mut ::std::fs::File::create(&::std::path::Path::new("test.jpeg"))
             .map_err(|err| err.to_string())?;
         let nth: &usize = &rng.gen_range(0, self.test_count);
