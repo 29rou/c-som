@@ -27,7 +27,6 @@ impl CifarDataset {
         } = CifarDataset::get_file_paths(path)?;
         let meta_data: Vec<String> =
             CifarDataset::get_meta_data(&meta_data_paths).map_err(|err| err.to_string())?;
-        println!("{:?}", meta_data);
         let train_images: Vec<::cifar::image::CifarImage> = {
             let byte_datas: Vec<Vec<u8>> =
                 CifarDataset::get_byte_datas(&train_data_paths).map_err(|err| err.to_string())?;
@@ -48,14 +47,14 @@ impl CifarDataset {
         Ok(cifar_dataset)
     }
     fn get_file_paths(path: &::std::path::Path) -> Result<CifarFilePaths, String> {
+        use self::regex::Regex;
         let paths = &walkdir::WalkDir::new(path)
             .into_iter()
             .flat_map(|x| x.map(|x| x.path().to_path_buf()))
             .filter(|x| x.is_file())
             .collect::<Vec<::std::path::PathBuf>>();
-        let train_data_path_re =
-            regex::Regex::new("data_batch_[1-5].bin").map_err(|err| err.to_string())?;
-        let test_data_path_re = regex::Regex::new("test_batch.bin").map_err(|err| err.to_string())?;
+        let train_data_path_re = Regex::new("data_batch_[1-5].bin").map_err(|err| err.to_string())?;
+        let test_data_path_re = Regex::new("test_batch.bin").map_err(|err| err.to_string())?;
         let cifar_file_paths = CifarFilePaths {
             meta_data_paths: CifarDataset::get_meta_data_paths(paths)?,
             train_data_paths: CifarDataset::get_paths_regex(paths, &train_data_path_re)?,
@@ -66,9 +65,10 @@ impl CifarDataset {
     fn get_meta_data_paths(
         paths: &[::std::path::PathBuf],
     ) -> Result<Vec<::std::path::PathBuf>, String> {
-        let meta_data_file_name = ::std::path::Path::new("batches.meta.txt");
-        let fpaths: Vec<::std::path::PathBuf> = paths
-            .iter()
+        use std::path::{Path, PathBuf};
+        let meta_data_file_name = Path::new("batches.meta.txt");
+        let fpaths: Vec<PathBuf> = paths
+            .into_iter()
             .filter(|path| {
                 path.file_name()
                     .map(|file_name| file_name == meta_data_file_name)
@@ -86,12 +86,15 @@ impl CifarDataset {
         paths: &[::std::path::PathBuf],
         re: &self::regex::Regex,
     ) -> Result<Vec<::std::path::PathBuf>, String> {
-        let fpaths: Vec<::std::path::PathBuf> = paths
+        use std::path::PathBuf;
+        let fpaths: Vec<PathBuf> = paths
             .iter()
             .filter(|path| {
                 path.file_name()
-                    .map(|file_name| file_name.to_string_lossy())
-                    .map(|file_name| re.is_match(file_name.as_ref()))
+                    .map(|file_name| {
+                        let file_name = file_name.to_string_lossy();
+                        re.is_match(file_name.as_ref())
+                    })
                     .unwrap_or(false)
             })
             .cloned()
@@ -160,17 +163,36 @@ impl CifarDataset {
             })
             .collect::<Result<Vec<::cifar::image::CifarImage>, String>>()
     }
-    pub fn for_test_get_image_by_save(&self) -> Result<(), String> {
+    pub fn for_test_get_image_from_train_save(
+        &self,
+        rng: &mut rand::ThreadRng,
+    ) -> Result<(), String> {
         use self::rand::{thread_rng, Rng};
-        let fout = &mut ::std::fs::File::create(&::std::path::Path::new("test.jpeg"))
+        let fout = &mut ::std::fs::File::create(&::std::path::Path::new("train.jpeg"))
             .map_err(|err| err.to_string())?;
-        let nth: &usize = &thread_rng().gen_range(0, self.train_count);
+        let nth: &usize = &rng.gen_range(0, self.train_count);
         let data: &::cifar::image::CifarImage = &self.train_dataset[*nth];
         data.image
             .resize(500, 500, image::FilterType::Lanczos3)
             .save(fout, image::JPEG)
             .map_err(|err| err.to_string())?;
-        println!("No.{} {}", nth, self.labels[data.label as usize]);
+        println!("From Train No.{} {}", nth, self.labels[data.label as usize]);
+        Ok(())
+    }
+    pub fn for_test_get_image_from_test_save(
+        &self,
+        rng: &mut rand::ThreadRng,
+    ) -> Result<(), String> {
+        use self::rand::{thread_rng, Rng};
+        let fout = &mut ::std::fs::File::create(&::std::path::Path::new("test.jpeg"))
+            .map_err(|err| err.to_string())?;
+        let nth: &usize = &rng.gen_range(0, self.test_count);
+        let data: &::cifar::image::CifarImage = &self.test_dataset[*nth];
+        data.image
+            .resize(500, 500, image::FilterType::Lanczos3)
+            .save(fout, image::JPEG)
+            .map_err(|err| err.to_string())?;
+        println!("From test No.{} {}", nth, self.labels[data.label as usize]);
         Ok(())
     }
 }

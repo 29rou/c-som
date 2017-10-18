@@ -19,10 +19,16 @@ lazy_static!{
 fn main() {
     //use csom::Csom::Csom;
     let cifar_dataset = &CIFARDATASET;
+    let rng = &mut rand::thread_rng();
+    println!("{:?}", cifar_dataset.labels);
     println!("Test Data Count: {}", cifar_dataset.test_count);
     println!("Train Data Count:{}", cifar_dataset.train_count);
-    cifar_dataset.for_test_get_image_by_save().unwrap();
-    let rng = &mut rand::thread_rng();
+    cifar_dataset
+        .for_test_get_image_from_train_save(rng)
+        .unwrap();
+    cifar_dataset
+        .for_test_get_image_from_test_save(rng)
+        .unwrap();
     let csom = csom::Csom::Csom::new(rng);
     csom.train(cifar_dataset, rng);
     println!("{:?}", csom.fully_connected_layers.layer1[0])

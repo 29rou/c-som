@@ -21,7 +21,7 @@ macro_rules! rand_0_1{
     }
 }
 
-/*pub fn rand_0_255<T>(rng: &mut rand::ThreadRng) -> T
+pub fn rand_0_255<T>(rng: &mut rand::ThreadRng) -> T
 where
     T: self::num::cast::FromPrimitive,
 {
@@ -35,4 +35,4 @@ where
 {
     use rand::distributions::{IndependentSample, Normal};
     num::cast::FromPrimitive::from_f64(Normal::new(0.5, 0.109).ind_sample(rng)).unwrap()
-}*/
+}
