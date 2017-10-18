@@ -34,10 +34,11 @@ impl CifarDataset {
         let test_images_handle = spawn(move || {
             CifarDataset::get_images(CifarDataset::get_byte_datas(&test_data_paths)?)
         });
+        let labels = CifarDataset::for_cifardataset_join_thread(meta_data_handle)?;
         let train_images = CifarDataset::for_cifardataset_join_thread(train_images_handle)?;
         let test_images = CifarDataset::for_cifardataset_join_thread(test_images_handle)?;
         let cifar_dataset = CifarDataset {
-            labels: CifarDataset::for_cifardataset_join_thread(meta_data_handle)?,
+            labels: labels,
             train_count: train_images.len() as usize,
             train_dataset: train_images,
             test_count: test_images.len() as usize,
@@ -71,10 +72,11 @@ impl CifarDataset {
     fn get_meta_data_paths(
         paths: &[::std::path::PathBuf],
     ) -> Result<Vec<::std::path::PathBuf>, String> {
+        use self::rayon::prelude::*;
         use std::path::{Path, PathBuf};
         let meta_data_file_name = Path::new("batches.meta.txt");
         let fpaths: Vec<PathBuf> = paths
-            .into_iter()
+            .into_par_iter()
             .filter(|path| {
                 path.file_name()
                     .map(|file_name| file_name == meta_data_file_name)
@@ -92,9 +94,10 @@ impl CifarDataset {
         paths: &[::std::path::PathBuf],
         re: &self::regex::Regex,
     ) -> Result<Vec<::std::path::PathBuf>, String> {
+        use self::rayon::prelude::*;
         use std::path::PathBuf;
         let fpaths: Vec<PathBuf> = paths
-            .iter()
+            .par_iter()
             .filter(|path| {
                 path.file_name()
                     .map(|file_name| {
@@ -136,8 +139,9 @@ impl CifarDataset {
     fn get_byte_datas(paths: &[::std::path::PathBuf]) -> Result<Vec<Vec<u8>>, ::std::io::Error> {
         use std::io::{BufReader, Read};
         use self::itertools::Itertools;
+        use self::rayon::prelude::*;
         paths
-            .iter()
+            .par_iter()
             .map(|file_path| -> Result<Vec<u8>, ::std::io::Error> {
                 ::std::fs::File::open(file_path).and_then(|file| {
                     let mut byte_data: Vec<u8> = Vec::new();
