@@ -31,5 +31,5 @@ fn main() {
         .unwrap();
     let csom = csom::Csom::Csom::new(rng);
     csom.train(cifar_dataset, rng);
-    println!("{:?}", csom.fully_connected_layers.layer1[0])
+    println!("{:?}", csom.som_layers[4].row(0))
 }

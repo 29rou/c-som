@@ -3,6 +3,9 @@ authors = ["29rou <g196010r@icu.ac.jp>"]
 name = "c-som"
 version = "0.1.0"
 
+[build-dependencies]
+blas-sys = "0.6.9"
+
 [dependencies]
 image = "0.17.0"
 itertools = "0.7.1"
@@ -12,11 +15,21 @@ num = "0.1.40"
 rand = "0.3.17"
 rayon = "0.8.2"
 regex = "0.2.2"
+typenum = "1.9.0"
 walkdir = "1.0.7"
+
+[dependencies.blas-sys]
+default-features = false
+features = ["openblas"]
+version = "0.6.9"
 
 [dependencies.clippy]
 optional = true
 version = "0.0.165"
+
+[dependencies.ndarray]
+features = ["blas"]
+version = "0.10.12"
 
 [features]
 default = []
