@@ -1,4 +1,5 @@
 extern crate itertools;
+extern crate nalgebra;
 extern crate rand;
 
 pub type SomLayer = [[f32; 9]; 255];
