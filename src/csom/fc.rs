@@ -1,4 +1,5 @@
 extern crate itertools;
+extern crate num;
 extern crate rand;
 
 macro_rules!  for_fully_connected_layer_init{

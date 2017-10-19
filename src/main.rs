@@ -2,6 +2,7 @@
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 #[macro_use]
 extern crate lazy_static;
+extern crate ndarray;
 extern crate rand;
 
 mod cifar;
@@ -20,9 +21,6 @@ fn main() {
     //use csom::Csom::Csom;
     let cifar_dataset = &CIFARDATASET;
     let rng = &mut rand::thread_rng();
-    println!("{:?}", cifar_dataset.labels);
-    println!("Test Data Count: {}", cifar_dataset.test_count);
-    println!("Train Data Count:{}", cifar_dataset.train_count);
     cifar_dataset
         .for_test_get_image_from_train_save(rng)
         .unwrap();
@@ -30,6 +28,15 @@ fn main() {
         .for_test_get_image_from_test_save(rng)
         .unwrap();
     let csom = csom::Csom::Csom::new(rng);
+    println!("{:?}", cifar_dataset.labels);
+    println!("Test Data Count: {}", cifar_dataset.test_count);
+    println!("Train Data Count:{}", cifar_dataset.train_count);
     csom.train(cifar_dataset, rng);
-    println!("{:?}", csom.som_layers[4].row(0))
+    //println!("{:?}", csom.som_layers[0]);
+    use ndarray::{Axis, arr3, aview2};
+    println!("{:?}", csom.som_layers);
+    println!("{:?}", csom.som_layers.subview(Axis(0), 0));
+    println!("{:?}", csom.som_layers.subview(Axis(0), 1));
+    println!("{:?}", csom.som_layers.subview(Axis(0), 2));
+    println!("{:?}", csom.som_layers.shape());
 }
