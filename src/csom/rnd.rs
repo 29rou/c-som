@@ -26,7 +26,7 @@ pub(in csom) fn rand_0_255<T>(rng: &mut rand::ThreadRng) -> T
 where
     T: self::num::cast::FromPrimitive,
 {
-    use rand::distributions::{IndependentSample, Normal};
+    use self::rand::distributions::{IndependentSample, Normal};
     num::cast::FromPrimitive::from_f64(Normal::new(113.0, 26.5).ind_sample(rng)).unwrap()
 }
 
@@ -34,6 +34,6 @@ pub(in csom) fn rand_0_1<T>(rng: &mut rand::ThreadRng) -> T
 where
     T: self::num::cast::FromPrimitive,
 {
-    use rand::distributions::{IndependentSample, Normal};
+    use self::rand::distributions::{IndependentSample, Normal};
     num::cast::FromPrimitive::from_f64(Normal::new(0.5, 0.109).ind_sample(rng)).unwrap()
 }

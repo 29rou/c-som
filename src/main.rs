@@ -4,7 +4,6 @@
 extern crate cifar_10_loader;
 #[macro_use]
 extern crate lazy_static;
-extern crate ndarray;
 extern crate rand;
 
 mod csom;
@@ -12,7 +11,6 @@ mod csom;
 
 lazy_static!{
     static ref CIFARDATASET: cifar_10_loader::CifarDataset = {
-        //let args = &std::env::args().collect::<Vec<String>>();
         const PATH: &str = "./cifar-10-batches-bin/";
         let cifar_dataset = cifar_10_loader::CifarDataset::new(PATH).unwrap();
         let rng = &mut rand::thread_rng();
@@ -22,7 +20,6 @@ lazy_static!{
     };
 }
 fn main() {
-    //let cifar_dataset = &CIFARDATASET;
     println!("START!!");
     let rng = &mut rand::thread_rng();
     let csom = csom::Csom::new(rng).unwrap();
