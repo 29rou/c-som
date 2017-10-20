@@ -35,8 +35,8 @@ fn main() {
     //println!("{:?}", csom.som_layers[0]);
     use ndarray::{Axis, arr3, aview2};
     println!("{:?}", csom.som_layers);
-    println!("{:?}", csom.som_layers.subview(Axis(0), 0));
+    /*println!("{:?}", csom.som_layers.subview(Axis(0), 0));
     println!("{:?}", csom.som_layers.subview(Axis(0), 1));
     println!("{:?}", csom.som_layers.subview(Axis(0), 2));
-    println!("{:?}", csom.som_layers.shape());
+    println!("{:?}", csom.som_layers.shape());*/
 }
