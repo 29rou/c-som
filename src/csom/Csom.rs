@@ -41,14 +41,14 @@ impl Csom {
     }
     pub fn train(
         &self,
-        cifar_dataset: &cifar_10_loader::dataset::CifarDataset,
+        cifar_dataset: &cifar_10_loader::CifarDataset,
         rng: &mut rand::ThreadRng,
     ) -> &Self {
         self
     }
     pub fn test(
         &self,
-        cifar_test_dataset: &cifar_10_loader::dataset::CifarDataset,
+        cifar_test_dataset: &cifar_10_loader::CifarDataset,
         rng: &mut rand::ThreadRng,
     ) -> &Self {
         self
