@@ -1,9 +1,9 @@
 extern crate ndarray;
 
-pub type SomLayers = ndarray::Array3<f32>;
+pub(in csom) type SomLayers = ndarray::Array3<f32>;
 
 
-pub trait SomLayersTrait {
+pub(in csom) trait SomLayersTrait {
     fn layer(&self, idx: usize) -> self::ndarray::ArrayView2<f32>;
     fn layer_mut(&mut self, idx: usize) -> self::ndarray::ArrayViewMut2<f32>;
 }

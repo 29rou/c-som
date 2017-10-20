@@ -88,7 +88,7 @@ dependencies = [
 [[package]]
 name = "cifar_10_loader"
 version = "0.1.0"
-source = "git+https://github.com/29rou/cifar-10-loader-rs#deb66fb1c07336f2d6a5889e1de5f30da096d11d"
+source = "git+https://github.com/29rou/cifar-10-loader-rs#3a779a532f01054f3ee5e57c23d26fb93aff1c0e"
 dependencies = [
  "image 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",

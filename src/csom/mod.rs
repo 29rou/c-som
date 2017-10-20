@@ -1,4 +1,5 @@
 #[macro_use]
 mod rnd;
 mod somlayers;
-pub mod Csom;
+mod csom;
+pub use self::csom::Csom;

@@ -25,7 +25,7 @@ fn main() {
     //let cifar_dataset = &CIFARDATASET;
     println!("START!!");
     let rng = &mut rand::thread_rng();
-    let csom = csom::Csom::Csom::new(rng).unwrap();
+    let csom = csom::Csom::new(rng).unwrap();
     csom.train(&CIFARDATASET, rng);
     //csom.output().unwrap();
 }
