@@ -20,7 +20,7 @@ struct CifarFilePaths {
 }
 
 impl CifarDataset {
-    pub fn new(path: &::std::path::Path) -> Result<Self, String> {
+    pub fn new<P: AsRef<::std::path::Path>>(path: P) -> Result<Self, String> {
         use std::thread::spawn;
         let CifarFilePaths {
             meta_data_paths,
@@ -53,7 +53,7 @@ impl CifarDataset {
             .map(|content| content.map_err(|err| err.to_string()))
             .map_err(|_| "thread panicked".to_string())?
     }
-    fn get_file_paths(path: &::std::path::Path) -> Result<CifarFilePaths, String> {
+    fn get_file_paths<P: AsRef<::std::path::Path>>(path: P) -> Result<CifarFilePaths, String> {
         use self::regex::Regex;
         let paths = &walkdir::WalkDir::new(path)
             .into_iter()

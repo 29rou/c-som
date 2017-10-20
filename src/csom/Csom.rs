@@ -2,44 +2,27 @@ extern crate ndarray;
 extern crate num;
 extern crate rand;
 
-type SomLayers = ndarray::Array3<f32>;
-
-
-pub trait SomLayersTrait {
-    fn layer(&self, idx: usize) -> self::ndarray::ArrayView2<f32>;
-    fn layer_mut(&mut self, idx: usize) -> self::ndarray::ArrayViewMut2<f32>;
-}
-
-impl SomLayersTrait for SomLayers {
-    fn layer(&self, idx: usize) -> self::ndarray::ArrayView2<f32> {
-        use ndarray::Axis;
-        self.subview(Axis(0), idx)
-    }
-    fn layer_mut(&mut self, idx: usize) -> self::ndarray::ArrayViewMut2<f32> {
-        use ndarray::Axis;
-        self.subview_mut(Axis(0), idx)
-    }
-}
 
 pub struct Csom {
-    pub som_layers: SomLayers,
+    pub som_layers: ::csom::somlayers::SomLayers,
     pub fully_connected_layers: Vec<ndarray::Array2<f32>>,
 }
 
 impl Csom {
-    pub fn new(rng: &mut rand::ThreadRng) -> Self {
+    pub fn new(rng: &mut rand::ThreadRng) -> Result<Self, self::ndarray::ShapeError> {
         use csom::rnd::{rand_0_1, rand_0_255};
-        let som_layers = Csom::new_layer_rand((5, 256, 9), rng, rand_0_255).unwrap();
+        let som_layers = Csom::new_layer_rand((5, 256, 9), rng, rand_0_255)?;
         let fully_connected_layers = vec![
-            Csom::new_layer_rand((16, 16), rng, rand_0_1).unwrap(),
-            Csom::new_layer_rand((16, 16), rng, rand_0_1).unwrap(),
-            Csom::new_layer_rand((16, 10), rng, rand_0_1).unwrap(),
-            Csom::new_layer_rand((10, 10), rng, rand_0_1).unwrap(),
+            Csom::new_layer_rand((16, 16), rng, rand_0_1)?,
+            Csom::new_layer_rand((16, 16), rng, rand_0_1)?,
+            Csom::new_layer_rand((16, 10), rng, rand_0_1)?,
+            Csom::new_layer_rand((10, 10), rng, rand_0_1)?,
         ];
-        Csom {
+        let csom = Csom {
             som_layers: som_layers,
             fully_connected_layers: fully_connected_layers,
-        }
+        };
+        Ok(csom)
     }
     fn new_layer_rand<T, E>(
         shape: E,

@@ -25,7 +25,7 @@ version = "0.6.9"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.165"
+version = "0.0.166"
 
 [dependencies.ndarray]
 features = ["blas"]
