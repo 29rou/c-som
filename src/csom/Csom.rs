@@ -1,11 +1,12 @@
+extern crate cifar_10_loader;
 extern crate ndarray;
 extern crate num;
 extern crate rand;
 
 
 pub struct Csom {
-    pub som_layers: ::csom::somlayers::SomLayers,
-    pub fully_connected_layers: Vec<ndarray::Array2<f32>>,
+    som_layers: ::csom::somlayers::SomLayers,
+    fully_connected_layers: Vec<ndarray::Array2<f32>>,
 }
 
 impl Csom {
@@ -40,19 +41,30 @@ impl Csom {
     }
     pub fn train(
         &self,
-        cifar_dataset: &::cifar::dataset::CifarDataset,
+        cifar_dataset: &cifar_10_loader::dataset::CifarDataset,
         rng: &mut rand::ThreadRng,
     ) -> &Self {
         self
     }
     pub fn test(
         &self,
-        cifar_test_dataset: &::cifar::dataset::CifarDataset,
+        cifar_test_dataset: &cifar_10_loader::dataset::CifarDataset,
         rng: &mut rand::ThreadRng,
     ) -> &Self {
         self
     }
     pub fn save(&self) -> Result<&Self, String> {
         Ok(self)
+    }
+    pub fn output(&self) -> Result<(), String> {
+        use csom::somlayers::SomLayersTrait;
+        use ndarray::Axis;
+        println!("{:?}", self.som_layers);
+        println!("{:?}", self.som_layers.subview(Axis(0), 0));
+        println!("{:?}", self.som_layers.subview(Axis(0), 1));
+        println!("{:?}", self.som_layers.subview(Axis(0), 2));
+        println!("{:?}", self.som_layers.layer(0));
+        println!("{:?}", self.som_layers.shape());
+        Ok(())
     }
 }

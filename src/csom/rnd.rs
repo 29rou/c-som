@@ -1,6 +1,7 @@
 extern crate num;
 extern crate rand;
 #[macro_export]
+
 macro_rules! rand_0_255{
     ($rng:ident) =>
     {
