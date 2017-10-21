@@ -11,7 +11,7 @@ pub struct Csom {
 
 impl Csom {
     pub fn new(rng: &mut rand::ThreadRng) -> Result<Self, self::ndarray::ShapeError> {
-        use super::{rand_0_1, rand_0_255};
+        use super::rnd::{rand_0_1, rand_0_255};
         let som_layers = Csom::new_layer_rand((5, 256, 9), rng, rand_0_255)?;
         let fully_connected_layers = vec![
             Csom::new_layer_rand((16, 16), rng, rand_0_1)?,
