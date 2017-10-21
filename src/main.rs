@@ -2,7 +2,6 @@
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
 extern crate cifar_10_loader;
-extern crate image;
 #[macro_use]
 extern crate lazy_static;
 extern crate rand;
@@ -14,6 +13,7 @@ fn for_test_get_image_from_train_save(
     rng: &mut rand::ThreadRng,
 ) -> Result<(), String> {
     use self::rand::Rng;
+    use self::cifar_10_loader::image;
     let fout = &mut ::std::fs::File::create(&::std::path::Path::new("train.jpeg"))
         .map_err(|err| err.to_string())?;
     let nth: &usize = &rng.gen_range(0, data_set.train_count);
@@ -33,6 +33,7 @@ fn for_test_get_image_from_test_save(
     data_set: &cifar_10_loader::CifarDataset,
     rng: &mut rand::ThreadRng,
 ) -> Result<(), String> {
+    use self::cifar_10_loader::image;
     use self::rand::Rng;
     let fout = &mut ::std::fs::File::create(&::std::path::Path::new("test.jpeg"))
         .map_err(|err| err.to_string())?;
