@@ -17,7 +17,7 @@ rand = "0.3.17"
 rayon = "0.8.2"
 regex = "0.2.2"
 typenum = "1.9.0"
-walkdir = "1.0.7"
+walkdir = "2.0.0"
 
 [dependencies.blas-sys]
 default-features = false

@@ -69,8 +69,8 @@ lazy_static!{
         const PATH: &str = "./cifar-10-batches-bin/";
         let cifar_dataset = cifar_10_loader::CifarDataset::new(PATH).unwrap();
         let rng = &mut rand::thread_rng();
-        cifar_dataset.info_output();
-        cifar_dataset.test_output(rng).unwrap();
+        info_output(&cifar_dataset);
+        test_output(&cifar_dataset,rng).unwrap();
         cifar_dataset
     };
 }
