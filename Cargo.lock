@@ -3,8 +3,9 @@ name = "c-som"
 version = "0.1.0"
 dependencies = [
  "blas-sys 0.6.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "cifar_10_loader 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cifar_10_loader 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "clippy 0.0.166 (registry+https://github.com/rust-lang/crates.io-index)",
+ "image 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ndarray 0.10.12 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -81,7 +82,7 @@ dependencies = [
 
 [[package]]
 name = "cifar_10_loader"
-version = "0.1.13"
+version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "image 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -707,7 +708,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum blas-sys 0.6.9 (registry+https://github.com/rust-lang/crates.io-index)" = "d8f9828026cdd2441c52d1299842da7baff09d325a98f6e97df527ad8f29a095"
 "checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"
 "checksum cargo_metadata 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "be1057b8462184f634c3a208ee35b0f935cfd94b694b26deadccd98732088d7b"
-"checksum cifar_10_loader 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "0680e30da4b18b3d328e11df2700470ff360a73d3147e9f3d097e080c58426ab"
+"checksum cifar_10_loader 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "9e0547e507c1d34531f4f357b0024e544f2656d75b71230ce4fede7d8ca96fa6"
 "checksum clippy 0.0.166 (registry+https://github.com/rust-lang/crates.io-index)" = "86c1e9a7fd08987104fcca0ce1ab0a627006ed955ce14a87ffa32754c947fccb"
 "checksum clippy_lints 0.0.166 (registry+https://github.com/rust-lang/crates.io-index)" = "cbde64e1942d299a8ebe242d54567654db22aa06bdaae7aa3eb392db275172e0"
 "checksum coco 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c06169f5beb7e31c7c67ebf5540b8b472d23e3eade3b2ec7d1f5b504a85f91bd"
