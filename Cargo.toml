@@ -3,25 +3,31 @@ authors = ["29rou <g196010r@icu.ac.jp>"]
 name = "c-som"
 version = "0.1.0"
 
-[build-dependencies]
-blas-sys = "0.6.9"
-
-[dependencies]
-cifar_10_loader = "0.1.16"
-image = "0.17.0"
-lazy_static = "0.2.9"
-nalgebra = "0.13.1"
-num = "0.1.40"
-rand = "0.3.17"
-
-[dependencies.blas-sys]
+[build-dependencies.blas-sys]
 default-features = false
 features = ["openblas"]
 version = "0.6.9"
 
+[dependencies]
+lazy_static = "0.2.9"
+num = "0.1.40"
+rand = "0.3.17"
+
+[dependencies.cifar_10_loader]
+default-features = false
+features = [
+    "rayon",
+    "jpeg",
+]
+path = "../cifar-10-loader-rs"
+
 [dependencies.clippy]
 optional = true
 version = "0.0.166"
+
+[dependencies.image]
+default-features = false
+version = "0.17.0"
 
 [dependencies.ndarray]
 features = ["blas"]
