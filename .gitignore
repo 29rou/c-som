@@ -1,3 +1,5 @@
 target/
 **/*.rs.bk
 rls.toml
+cifar-10-batches-bin
+*.json
