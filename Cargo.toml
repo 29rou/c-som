@@ -23,7 +23,7 @@ path = "../cifar-10-loader-rs"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.166"
+version = "0.0.167"
 
 [dependencies.image]
 default-features = false
