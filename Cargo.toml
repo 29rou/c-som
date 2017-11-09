@@ -11,7 +11,8 @@ version = "0.6.9"
 [dependencies]
 lazy_static = "0.2.9"
 num = "0.1.40"
-rand = "0.3.17"
+rand = "0.3.18"
+typenum = "1.9.0"
 
 [dependencies.cifar_10_loader]
 default-features = false
@@ -23,7 +24,7 @@ path = "../cifar-10-loader-rs"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.167"
+version = "0.0.169"
 
 [dependencies.image]
 default-features = false

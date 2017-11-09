@@ -79,7 +79,7 @@ lazy_static!{
 fn main() {
     println!("START!!");
     let rng = &mut rand::thread_rng();
-    let csom = csom::Csom::new(rng).unwrap();
+    let csom = csom::Csom::<f32>::new(rng).unwrap();
     csom.train(&CIFARDATASET, rng);
     //csom.output().unwrap();
 }
