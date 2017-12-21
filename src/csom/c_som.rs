@@ -14,9 +14,7 @@ where
 {
     pub fn new(rng: &mut rand::ThreadRng) -> Result<Self, self::ndarray::ShapeError> {
         use super::rnd::rand_0_255;
-        use super::SomLayersTrait;
-        let som_layers =
-            SomLayersTrait::new::<(usize, usize)>((5 as usize, 256 as usize), rng, rand_0_255);
+        let som_layers = super::SomLayers::new((5, 256), rng, rand_0_255);
         let csom = Csom {
             som_layers: som_layers,
         };

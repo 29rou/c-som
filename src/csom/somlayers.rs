@@ -2,7 +2,7 @@ extern crate ndarray;
 extern crate num;
 extern crate rand;
 
-pub(in csom) type SomLayers<T, E> = ndarray::Array<Cell<T>, <E as ndarray::IntoDimension>::Dim>;
+pub(in csom) struct SomLayers<T, D>(ndarray::Array<Cell<T>, D>);
 
 #[derive(Debug)]
 pub(in csom) struct Cell<T> {
@@ -10,33 +10,25 @@ pub(in csom) struct Cell<T> {
     data: ndarray::Array1<T>,
 }
 
-pub(in csom) trait SomLayersTrait<T, E>
+impl<T, D> SomLayers<T, D>
 where
     T: self::num::cast::FromPrimitive,
-    E: self::ndarray::IntoDimension,
+    D: self::ndarray::Dimension,
 {
-    fn new(
+    pub fn new<E>(
         shape: E,
         rng: &mut rand::ThreadRng,
         rand_func: fn(&mut rand::ThreadRng) -> T,
-    ) -> ndarray::Array<Cell<T>, <E as ndarray::IntoDimension>::Dim>;
-}
-
-impl<T, E> SomLayersTrait<T, E> for SomLayers<T, E>
-where
-    T: self::num::cast::FromPrimitive,
-    E: self::ndarray::IntoDimension,
-{
-    fn new(
-        shape: E,
-        rng: &mut rand::ThreadRng,
-        rand_func: fn(&mut rand::ThreadRng) -> T,
-    ) -> ndarray::Array<Cell<T>, <E as ndarray::IntoDimension>::Dim> {
+    ) -> Self
+    where
+        E: self::ndarray::IntoDimension,
+        D:
+    {
         use self::ndarray::{Array, Dimension};
         let shape = shape.into_dimension();
         let num: usize = shape.slice().iter().fold(1, |s, x| s * x);
         let init_iter = (0..num).map(|_| -> Cell<T> { Cell::new(rng, rand_func) });
-        Array::from_iter(init_iter).into_shape(shape).unwrap()
+        SomLayers(Array::from_iter(init_iter).into_shape(shape).unwrap())
     }
 }
 
