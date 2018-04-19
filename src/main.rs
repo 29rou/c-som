@@ -1,85 +1,34 @@
-#![cfg_attr(feature = "clippy", feature(plugin))]
-#![cfg_attr(feature = "clippy", plugin(clippy))]
-
-extern crate cifar_10_loader;
-extern crate image;
-#[macro_use]
-extern crate lazy_static;
+mod som;
+extern crate num_traits;
 extern crate rand;
+extern crate typenum;
+#[macro_use]
+extern crate generic_array;
 
-mod csom;
-
-fn for_test_get_image_from_train_save(
-    data_set: &cifar_10_loader::CifarDataset,
-    rng: &mut rand::ThreadRng,
-) -> Result<(), String> {
-    use self::rand::Rng;
-    //use self::cifar_10_loader::image;
-    let fout = &mut ::std::fs::File::create(&::std::path::Path::new("train.jpeg"))
-        .map_err(|err| err.to_string())?;
-    let nth: &usize = &rng.gen_range(0, data_set.train_count);
-    let data: &cifar_10_loader::CifarImage = &data_set.train_dataset[*nth];
-    data.image
-        .resize(500, 500, image::FilterType::Lanczos3)
-        .save(fout, image::JPEG)
-        .map_err(|err| err.to_string())?;
-    println!(
-        "From Train No.{} {}",
-        nth,
-        data_set.labels[data.label as usize]
-    );
-    Ok(())
-}
-fn for_test_get_image_from_test_save(
-    data_set: &cifar_10_loader::CifarDataset,
-    rng: &mut rand::ThreadRng,
-) -> Result<(), String> {
-    //use self::cifar_10_loader::image;
-    use self::rand::Rng;
-    let fout = &mut ::std::fs::File::create(&::std::path::Path::new("test.jpeg"))
-        .map_err(|err| err.to_string())?;
-    let nth: &usize = &rng.gen_range(0, data_set.test_count);
-    let data: &cifar_10_loader::CifarImage = &data_set.test_dataset[*nth];
-    data.image
-        .resize(500, 500, image::FilterType::Lanczos3)
-        .save(fout, image::JPEG)
-        .map_err(|err| err.to_string())?;
-    println!(
-        "From test No.{} {}",
-        nth,
-        data_set.labels[data.label as usize]
-    );
-    Ok(())
-}
-pub fn info_output(data_set: &cifar_10_loader::CifarDataset) {
-    println!("{:?}", data_set.labels);
-    println!("Test Data Count: {}", data_set.test_count);
-    println!("Train Data Count:{}", data_set.train_count);
-}
-pub fn test_output(
-    data_set: &cifar_10_loader::CifarDataset,
-    rng: &mut rand::ThreadRng,
-) -> Result<(), String> {
-    for_test_get_image_from_train_save(data_set, rng)?;
-    for_test_get_image_from_test_save(data_set, rng)?;
-    Ok(())
-}
-
-
-lazy_static!{
-    static ref CIFARDATASET: cifar_10_loader::CifarDataset = {
-        const PATH: &str = "./cifar-10-batches-bin/";
-        let cifar_dataset = cifar_10_loader::CifarDataset::new(PATH).unwrap();
-        let rng = &mut rand::thread_rng();
-        info_output(&cifar_dataset);
-        test_output(&cifar_dataset,rng).unwrap();
-        cifar_dataset
-    };
-}
 fn main() {
-    println!("START!!");
-    let rng = &mut rand::thread_rng();
-    let csom = csom::Csom::<f32>::new(rng).unwrap();
-    csom.train(&CIFARDATASET, rng);
-    //csom.output().unwrap();
+    use typenum::{U3,U5,U6};
+    let p:i32 = num_traits::one();
+    let p:i32 = num_traits::one::<i32>()+num_traits::one::<i32>();
+    println!("{}",p);
+    println!("Hello, World!!");
+    let mut vec1 = vec![0, 0, 0, 0, 0];
+    let mut vec2 = vec![0, 1, 2, 3, 4];
+    let vec3 = vec1.iter().zip(&mut vec2)
+        .map(|(a, b)| { *a + *b }).collect::<Vec<_>>();
+    let array1 = [[0; 5]; 3];
+    let array2 = [0, 1, 2, 3, 4];
+    let mut rng = rand::thread_rng();
+    let input2 = [0.1,1.0,2.0];
+    let input = arr![f32; 1, 2, 3];
+    let som1d = som::Som1d::<f64,U3,U5>::new(&mut rng);
+    use som::Som;
+    use rand::distributions::Normal;
+    let normal = Normal::new(0.0, 1.0);
+    let input:som::Array1D<U3,f64> = som::Array1D::new(&normal,&mut rng);
+    som1d.train(&input);
+    println!("{:?}", vec3);
+    use typenum::Unsigned;
+    type r = typenum::Quot<U6,U3>;
+    println!("{}",r::to_usize());
+    println!("{}", input2.iter().min_by(|x,y|x.partial_cmp(y).unwrap()).unwrap());
 }

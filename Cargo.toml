@@ -3,80 +3,13 @@ authors = ["29rou <g196010r@icu.ac.jp>"]
 name = "c-som"
 version = "0.1.0"
 
-[build-dependencies.blas-sys]
-default-features = false
-features = ["openblas"]
-version = "0.6.9"
-
 [dependencies]
-lazy_static = "1.0.0"
-num = "0.1.40"
-rand = "0.4.1"
-typenum = "1.9.0"
+num = "0.1.42"
+typenum = "1.10.0"
+itertools = "0.7.8"
+generic-array = "0.11.0"
+rand = "0.4.2"
 
-[dependencies.cifar_10_loader]
+[dependencies.num-traits]
+version = "0.2.2"
 default-features = false
-features = [
-    "rayon",
-    "jpeg",
-]
-version = "0.2.0"
-
-[dependencies.clippy]
-optional = true
-version = "0.0.176"
-
-[dependencies.image]
-##default-features = false
-version = "0.18.0"
-
-[dependencies.ndarray]
-##features = ["blas"]
-version = "0.10.13"
-
-[features]
-default = []
-[profile.bench]
-codegen-units = 1
-debug = false
-debug-assertions = false
-lto = false
-opt-level = 3
-panic = "unwind"
-rpath = false
-
-[profile.dev]
-codegen-units = 1
-debug = true
-debug-assertions = true
-lto = false
-opt-level = 0
-panic = "unwind"
-rpath = false
-
-[profile.doc]
-codegen-units = 1
-debug = 2
-debug-assertions = true
-lto = false
-opt-level = 0
-panic = "unwind"
-rpath = false
-
-[profile.release]
-codegen-units = 1
-debug = false
-debug-assertions = false
-lto = false
-opt-level = 3
-panic = "unwind"
-rpath = false
-
-[profile.test]
-codegen-units = 1
-debug = 2
-debug-assertions = true
-lto = false
-opt-level = 0
-panic = "unwind"
-rpath = false
