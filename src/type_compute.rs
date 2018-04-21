@@ -7,8 +7,8 @@ use generic_array::{GenericArray, ArrayLength};
 
 #[macro_export]
 macro_rules! shp {
-    ($n:ty) => (Shape<$n,Nill>);
-    ($n:ty, ) =>(Shape<$n,Nill>);
+    ($n:ty) => (Shape<$n,Nil>);
+    ($n:ty, ) =>(Shape<$n,Nil>);
     ($n:ty, $($tail:ty),+) => (Shape<$n,shp![$($tail),+]>);
     ($n:ty, $($tail:ty),+,) => (Shpae<$n,shp![$($tail),+]>);
     () => ("""Macro requires types, e.g. `type Shape = shp![typenum::U1,typenum::U3];`");
@@ -22,7 +22,7 @@ pub type Car<T> = <T as ShapeTrait>::Car;
 pub type Cdr<T> = <T as ShapeTrait>::Cdr;
 pub type Total<T> = <T as ShapeTrait>::Total;
 
-pub struct Nill;
+pub struct Nil;
 
 pub struct Shape<A: Unsigned + NonZero, B>(PhantomData<(A, B)>);
 
@@ -55,10 +55,10 @@ pub trait ShapeTrait {
     unsafe fn for_shape_to_array(*mut usize);
 }
 
-impl<A: Unsigned + NonZero> ShapeTrait for Shape<A, Nill>
+impl<A: Unsigned + NonZero> ShapeTrait for Shape<A, Nil>
 {
     type Car = A;
-    type Cdr = Nill;
+    type Cdr = Nil;
     type Total = A;
     type Dim = U1;
     #[inline(always)]

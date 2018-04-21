@@ -15,7 +15,7 @@ extern crate generic_array;
 
 fn main() {
     use typenum::{U0, U1, U2, U3, U5, U6};
-    use type_compute::{Shape,Nill,ShapeTrait};
+    use type_compute::{Shape, Nil, ShapeTrait};
     let p: i32 = num_traits::one();
     let p: i32 = num_traits::one::<i32>() + num_traits::one::<i32>();
     println!("{}", p);
