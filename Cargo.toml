@@ -13,3 +13,25 @@ rand = "0.4.2"
 [dependencies.num-traits]
 version = "0.2.2"
 default-features = false
+
+[profile.release]
+codegen-units = 1
+debug = false
+debug-assertions = false
+lto = true
+opt-level = 3
+panic = "unwind"
+rpath = false
+incremental = false
+overflow-checks = false
+
+[profile.dev]
+codegen-units = 1
+debug = true
+debug-assertions = true
+lto = false
+opt-level = 0
+panic = "unwind"
+rpath = false
+incremental = true
+overflow-checks = true

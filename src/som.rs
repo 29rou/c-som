@@ -11,13 +11,104 @@ use self::typenum::{Prod, Quot};
 use self::std::ops::{Mul, Div};
 use std::marker::PhantomData;
 
+mod arraybase{
+    extern crate typenum;
+    extern crate generic_array;
+    extern crate num_traits;
+    use ::std;
+    use self::generic_array::{GenericArray, ArrayLength};
+    use self::typenum::{Prod};
+    use self::std::ops::{Mul};
+    use std::marker::PhantomData;
+    pub struct MathArrayBase<Dim, X, Y, Z, Type>
+        where
+            Y: Mul<X>,
+            Z: Mul<Prod<Y, X>>,
+            Prod<Z, Prod<Y, X>>: ArrayLength<Type>,
+    {
+        item: GenericArray<Type, Prod<Z, Prod<Y, X>>>,
+        _phantom: PhantomData<(Dim,X,Y,Z)>,
+    }
+    struct Array3<Total:ArrayLength<Type>,X,Y,Z,Type>{
+        item: Array2<Total,X,Y,Type>,
+        _phantom: PhantomData<Z>,
+    }
+    struct Array2<Total:ArrayLength<Type>,X,Y,Type>{
+        item: Array<Total,X,Type>,
+        _phantom: PhantomData<Y>
+    }
+    struct Array<Total:ArrayLength<Type>,X,Type>{
+        item: GenericArray<Type,Total>,
+        _phantom: PhantomData<X>,
+    }
 
-
+    
+    trait ArrayBaseTrait<T,Total>
+    {
+        type Dim;
+        type Shape;
+    }
+    impl <Dim,X,Y,Z,Type> std::ops::Add for MathArrayBase<Dim,X,Y,Z,Type>
+        where
+            Type: num_traits::Float,
+            X: typenum::Unsigned,
+            Y: Mul<X>+typenum::Unsigned,
+            Z: Mul<Prod<Y, X>>+typenum::Unsigned,
+            Prod<Z, Prod<Y, X>>: ArrayLength<Type>
+    {
+        type Output = MathArrayBase<Dim,X,Y,Z,Type>;
+        fn add(self, other: Self) -> Self{
+            let len = X::to_usize()*Y::to_usize()*Z::to_usize();
+            unsafe {
+                let mut output:Self::Output = std::mem::uninitialized();
+                for i in 0..len{
+                    output.item[i] = self.item[i] + other.item[i];
+                }
+                output
+            }
+        }
+    }
+    impl <Dim,X,Y,Z,Type> ArrayBaseTrait<Type,Prod<Z, Prod<Y, X>>> for MathArrayBase<Dim,X,Y,Z,Type>
+        where
+            Y: Mul<X>,
+            Z: Mul<Prod<Y, X>>,
+            Prod<Z, Prod<Y, X>>: ArrayLength<Type>,
+    {
+        type Dim = Dim;
+        type Shape = tarr![X,Y,Z];
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct MathArray<Dim, D, Total: ArrayLength<Type>, Type> {
     item: GenericArray<Type, Total>,
-    _phantom: PhantomData<(Dim,D)>,
+    _phantom: PhantomData<(Dim, D)>,
+}
+
+#[derive(Clone, Debug)]
+pub struct MathArrayBase<Dim, X, Y, Z, Type>
+    where
+        Y: Mul<X>,
+        Z: Mul<Prod<Y, X>>,
+        Prod<Z, Prod<Y, X>>: ArrayLength<Type>,
+{
+    item: GenericArray<Type, Prod<Z, Prod<Y, X>>>,
+    _phantom: PhantomData<Dim>,
+}
+
+
+enum MathArrayEnum<X,Y,Z,Type>
+where
+    X:ArrayLength<Type>,
+    Y:Mul<X>,
+    Z:Mul<Prod<Y,X>>,
+    Prod<Y,X>: ArrayLength<Type>,
+    Prod<Z,Prod<Y,X>>:ArrayLength<Type>
+{
+    Scalar(Type),
+    Array1D(GenericArray<Type,X>),
+    Array2D(GenericArray<Type,Prod<Y,X>>,PhantomData<(X,Y)>),
+    Array3D(GenericArray<Type,Prod<Z,Prod<Y,X>>>,PhantomData<(X,Y,Z)>)
 }
 
 struct Unknown;
@@ -27,10 +118,10 @@ pub type Array1D<Total, Type> = MathArray<typenum::U1, Total, Total, Type>;
 pub type Array2D<D, Total, Type> = MathArray<typenum::U2, D, Total, Type>;
 type Array3D<D, Total, Type> = MathArray<typenum::U3, D, Total, Type>;
 
-impl<Dim,D, Total, Type> MathArray<Dim, D, Total, Type>
+impl<Dim, D, Total, Type> MathArray<Dim, D, Total, Type>
     where
         Total: ArrayLength<Type>,
-        Type: num_traits::FromPrimitive+num_traits::Float,
+        Type: num_traits::FromPrimitive + num_traits::Float,
 {
     pub fn new(normal: &rand::distributions::Normal, rng: &mut rand::ThreadRng) -> Self {
         use rand::{ThreadRng, distributions::{Normal, IndependentSample}};
@@ -42,10 +133,10 @@ impl<Dim,D, Total, Type> MathArray<Dim, D, Total, Type>
         let rnd_iter = std::iter::repeat(()).map(|()| get_normal_random(&normal, rng)).take(Total::to_usize());
         MathArray {
             item: GenericArray::from_iter(rnd_iter),
-            _phantom:PhantomData,
+            _phantom: PhantomData,
         }
     }
-    fn get_minimum_location(&self)->usize
+    fn get_minimum_location(&self) -> usize
     {
         let mut iter = self.item.iter();
         let min_fn = |x: &Type, y: &Type| {
@@ -59,21 +150,21 @@ impl<Dim,D, Total, Type> MathArray<Dim, D, Total, Type>
 impl<D, Total, Type> MathArray<typenum::U2, D, Total, Type>
     where
         D: ArrayLength<Type>,
-        Total: ArrayLength<Type>+Div<D>,
-        Type: num_traits::FromPrimitive+num_traits::Float,
+        Total: ArrayLength<Type> + Div<D>,
+        Type: num_traits::FromPrimitive + num_traits::Float,
 {
-    fn broadcast_sub(&self,input:&MathArray<typenum::U1,D,D,Type>) -> Self
+    fn broadcast_sub(&self, input: &MathArray<typenum::U1, D, D, Type>) -> Self
     {
         MathArray {
-            item: self::for_matharray::broadcast_sub( &self.item, &input.item),
+            item: self::for_matharray::broadcast_sub(&self.item, &input.item),
             _phantom: PhantomData,
         }
     }
-    fn norms(&self)-> Array1D<Quot<Total,D>,Type>
-    where Quot<Total,D>:ArrayLength<Type>,
+    fn norms(&self) -> Array1D<Quot<Total, D>, Type>
+        where Quot<Total, D>: ArrayLength<Type>,
     {
         MathArray {
-            item: self::for_matharray::norms( &self.item),
+            item: self::for_matharray::norms(&self.item),
             _phantom: PhantomData,
         }
     }
@@ -82,21 +173,21 @@ impl<D, Total, Type> MathArray<typenum::U2, D, Total, Type>
 impl<D, Total, Type> MathArray<typenum::U3, D, Total, Type>
     where
         D: ArrayLength<Type>,
-        Total: ArrayLength<Type>+Div<D>,
-        Type: num_traits::FromPrimitive+num_traits::Float,
+        Total: ArrayLength<Type> + Div<D>,
+        Type: num_traits::FromPrimitive + num_traits::Float,
 {
-    fn broadcast_sub(&self,input:&MathArray<typenum::U1,D,D,Type>) -> Self
+    fn broadcast_sub(&self, input: &MathArray<typenum::U1, D, D, Type>) -> Self
     {
         MathArray {
-            item: self::for_matharray::broadcast_sub( &self.item, &input.item),
+            item: self::for_matharray::broadcast_sub(&self.item, &input.item),
             _phantom: PhantomData,
         }
     }
-    fn norms(&self)-> Array2D<Unknown,Quot<Total,D>,Type>
-        where Quot<Total,D>:ArrayLength<Type>,
+    fn norms(&self) -> Array2D<Unknown, Quot<Total, D>, Type>
+        where Quot<Total, D>: ArrayLength<Type>,
     {
         MathArray {
-            item: self::for_matharray::norms( &self.item),
+            item: self::for_matharray::norms(&self.item),
             _phantom: PhantomData,
         }
     }
@@ -107,20 +198,20 @@ impl<D, Total, Type> MathArray<typenum::U3, D, Total, Type>
 pub struct Som1d<T, W, H>
     where
         W: Mul<H>,
-        Prod<W, H>: ArrayLength<T>+std::clone::Clone+std::fmt::Debug,
+        Prod<W, H>: ArrayLength<T> + std::clone::Clone + std::fmt::Debug,
 {
     width: usize,
     height: usize,
     total: usize,
-    cells: Array2D<W, Prod<W,H>, T>,
+    cells: Array2D<W, Prod<W, H>, T>,
 }
 
 impl<T, W, H> Som1d<T, W, H>
     where
-        T: num_traits::FromPrimitive+num_traits::Float,
+        T: num_traits::FromPrimitive + num_traits::Float,
         H: typenum::Unsigned,
         W: Mul<H> + typenum::Unsigned,
-        Prod<W, H>: ArrayLength<T>+std::clone::Clone+std::fmt::Debug,
+        Prod<W, H>: ArrayLength<T> + std::clone::Clone + std::fmt::Debug,
 {
     pub fn new(rng: &mut rand::ThreadRng) -> Self {
         use rand::distributions::Normal;
@@ -129,34 +220,34 @@ impl<T, W, H> Som1d<T, W, H>
             width: W::to_usize(),
             height: H::to_usize(),
             total: W::to_usize() * H::to_usize(),
-            cells: Array2D::new(&normal,rng),
+            cells: Array2D::new(&normal, rng),
         }
     }
 }
 
-pub trait Som<T,Dim, D>
+pub trait Som<T, Dim, D>
     where
         T: num::Float,
         D: ArrayLength<T>,
         Quot<Self::Total, D>: ArrayLength<T>,
 {
     type Total: ArrayLength<T> + Div<D>;
-    fn train(&self, &Array1D<D,T>) -> MathArray<Dim, D, Self::Total,T>;
-    fn ref_cells(&self) -> &MathArray<Dim, D, Self::Total,T>;
+    fn train(&self, &Array1D<D, T>) -> MathArray<Dim, D, Self::Total, T>;
+    fn ref_cells(&self) -> &MathArray<Dim, D, Self::Total, T>;
 }
 
 
-impl<T, W, H> Som<T, typenum::U2,W> for Som1d<T, W, H>
+impl<T, W, H> Som<T, typenum::U2, W> for Som1d<T, W, H>
     where
-        T: num_traits::Float+num_traits::FromPrimitive,
+        T: num_traits::Float + num_traits::FromPrimitive,
         H: typenum::Unsigned + ArrayLength<T>,
         W: Mul<H> + ArrayLength<T>,
-        Prod<W, H>: ArrayLength<T> + Div<W>+std::clone::Clone+std::fmt::Debug,
+        Prod<W, H>: ArrayLength<T> + Div<W> + std::clone::Clone + std::fmt::Debug,
         Quot<Prod<W, H>, W>: ArrayLength<T>,
 {
     type Total = Prod<W, H>;
-    fn train(&self, input: &Array1D<W,T>)
-             -> Array2D<W, Self::Total,T>
+    fn train(&self, input: &Array1D<W, T>)
+             -> Array2D<W, Self::Total, T>
     {
         let diffs = self.ref_cells().broadcast_sub(input);
         let norms = diffs.norms();
@@ -164,7 +255,7 @@ impl<T, W, H> Som<T, typenum::U2,W> for Som1d<T, W, H>
         //let norms = self.norms(&diffs);
         diffs
     }
-    fn ref_cells(&self) ->  &Array2D<W, Prod<W,H>, T>{
+    fn ref_cells(&self) -> &Array2D<W, Prod<W, H>, T> {
         &(self.cells)
     }
 }
@@ -200,17 +291,17 @@ impl<T, D, W, H> Som<T> for Som2d<T, D, W, H>
 
 mod for_matharray {
     extern crate generic_array;
-    extern crate  num_traits;
-    extern crate  typenum;
+    extern crate num_traits;
+    extern crate typenum;
 
     use ::std;
     use std::ops::Div;
     use self::num_traits::Float;
-    use self::generic_array::{GenericArray,ArrayLength};
-    use self::typenum::{Unsigned,Quot};
+    use self::generic_array::{GenericArray, ArrayLength};
+    use self::typenum::{Unsigned, Quot};
 
     pub fn broadcast_sub<T, N, M>(cells: &GenericArray<T, N>, input: &GenericArray<T, M>)
-                              -> GenericArray<T, N>
+                                  -> GenericArray<T, N>
         where T: Float,
               N: ArrayLength<T>,
               M: ArrayLength<T>,
