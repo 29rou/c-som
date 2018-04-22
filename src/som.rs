@@ -1,3 +1,4 @@
+/*
 extern crate generic_array;
 extern crate itertools;
 extern crate num;
@@ -260,7 +261,7 @@ impl<T, W, H> Som<T, typenum::U2, W> for Som1d<T, W, H>
     }
 }
 
-/*
+*//*
 #[derive(Clone, Debug)]
 struct Som2d<T, D, W, H>
     where H: std::ops::Mul<D>,
@@ -287,7 +288,7 @@ impl<T, D, W, H> Som<T> for Som2d<T, D, W, H>
         self.clone().cells
     }
 }
-*/
+*//*
 
 mod for_matharray {
     extern crate generic_array;
@@ -341,4 +342,4 @@ mod for_matharray {
             norms
         }
     }
-}
+}*/
