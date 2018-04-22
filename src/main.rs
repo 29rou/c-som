@@ -18,7 +18,8 @@ fn main() {
     let test2 = &generic_array_math::MathArrayBase::<f32, ShapeTest>::new_rnd(&normal, &mut rng);
     let test3 = test + test2;
     println!("{:?},\n{:?},\n{:?}\n", test, test2, test3);
-    use c_som::type_compute::{ListToVecTrait,Len,Prod};
+    let t = test3.as_slice();
+    use c_som::shape::{ListToVecTrait, Len, Prod};
     use self::typenum::Unsigned;
     let s = ShapeTest::list_to_vec();
     let d = Len::<ShapeTest>::to_usize();
