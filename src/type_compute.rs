@@ -150,60 +150,6 @@ impl<A, B> LenTrait for List<A, B>
     type Len = Add1<B::Len>;
 }
 
-pub trait ListToArrayTrait: LenTrait {
-    fn list_to_array() -> GenericArray<usize, Self::Len>;
-}
-
-impl<A> ListToArrayTrait for List<A, Nil>
-    where
-        A: Unsigned + NonZero,
-{
-    #[inline(always)]
-    fn list_to_array() -> GenericArray<usize, Self::Len> {
-        arr![usize;A::to_usize()]
-    }
-}
-
-impl<A, B> ListToArrayTrait for List<A, B>
-    where
-        Self: ForListToArrayTrait + LenTrait,
-        A: Unsigned + NonZero,
-        B: ListToArrayTrait,
-{
-    #[inline]
-    fn list_to_array() -> GenericArray<usize, Self::Len> {
-        let mut array = <GenericArray<usize, Self::Len> as Default>::default();
-        unsafe { Self::for_list_to_array(array.as_mut_ptr()) };
-        array
-    }
-}
-
-
-pub trait ForListToArrayTrait
-{
-    unsafe fn for_list_to_array(*mut usize);
-}
-
-impl<A: Unsigned + NonZero> ForListToArrayTrait for List<A, Nil>
-{
-    #[inline(always)]
-    unsafe fn for_list_to_array(ptr: *mut usize) {
-        write(ptr, A::to_usize());
-    }
-}
-
-impl<A, B> ForListToArrayTrait for List<A, B>
-    where
-        A: Unsigned + NonZero,
-        B: ForListToArrayTrait,
-{
-    #[inline(always)]
-    unsafe fn for_list_to_array(ptr: *mut usize) {
-        write(ptr, A::to_usize());
-        B::for_list_to_array(ptr.offset(1));
-    }
-}
-
 pub trait ListToVecTrait {
     fn list_to_vec() -> Vec<usize>;
 }
