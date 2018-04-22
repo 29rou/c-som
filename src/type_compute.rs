@@ -1,9 +1,8 @@
 extern crate typenum;
 extern crate generic_array;
 
-use std::{ops, marker::PhantomData, ptr::write};
+use std::{ops, marker::PhantomData};
 use self::typenum::{U1, Unsigned, NonZero, Add1};
-use self::generic_array::{GenericArray, ArrayLength};
 
 #[macro_export]
 macro_rules! shp {
@@ -14,71 +13,73 @@ macro_rules! shp {
     () => ("""Macro requires types, e.g. `type List = shp![typenum::U1,typenum::U3];`");
 }
 
-pub type Shape<A,B> = List<A,B>;
+pub type Shape<A, B> = List<A, B>;
 pub type Car<T> = <T as ListTrait>::Car;
 pub type Cdr<T> = <T as ListTrait>::Cdr;
 pub type Prod<T> = <T as ProdTrait>::Prod;
 pub type Len<T> = <T as LenTrait>::Len;
 
 pub struct Zero;
+
 pub struct Succ<N>(PhantomData<N>);
 
 pub trait Nat {}
-impl Nat for Zero {}
-impl<N:Nat> Nat for Succ <N> {}
 
-pub trait ToUsize:Nat {
-    fn to_usize()->usize;
+impl Nat for Zero {}
+
+impl<N: Nat> Nat for Succ<N> {}
+
+pub trait ToUsize: Nat {
+    fn to_usize() -> usize;
 }
 
 impl ToUsize for Zero {
-    fn to_usize()->usize{
+    #[inline(always)]
+    fn to_usize() -> usize {
         0
     }
 }
 
-impl<N:Nat+ToUsize> ToUsize for Succ<N> {
-    fn to_usize()->usize{
-        N::to_usize()+1
+impl<N: Nat + ToUsize> ToUsize for Succ<N> {
+    #[inline]
+    fn to_usize() -> usize {
+        N::to_usize() + 1
     }
 }
 
-// Result = A + B;
-pub trait Add<A:Nat>:Nat {
+pub trait Add<A: Nat>: Nat {
     type Result: Nat;
 }
 
-impl<A:Nat> Add<A> for Zero{
+impl<A: Nat> Add<A> for Zero {
     type Result = A;
 }
-impl<A:Nat,B:Nat> Add<A> for Succ<B>
+
+impl<A: Nat, B: Nat> Add<A> for Succ<B>
     where B: Add<Succ<A>>,
 {
-    // Result = (A+1) + (B-1)
     type Result = <B as Add<Succ<A>>>::Result;
 }
 
-pub trait Mul<A:Nat>:Nat{
+pub trait Mul<A: Nat>: Nat {
     type Result: Nat;
 }
 
-impl<A:Nat> Mul<A> for Zero{
+impl<A: Nat> Mul<A> for Zero {
     type Result = Zero;
 }
 
-impl<A:Nat,B:Nat> Mul<A> for Succ<B>
+impl<A: Nat, B: Nat> Mul<A> for Succ<B>
     where
-        A:Add<<B as Mul<A>>::Result>,
-        B:Mul<A>,
+        A: Add<<B as Mul<A>>::Result>,
+        B: Mul<A>,
 {
-    // Result = A * B
-    // Result = A * (B - 1) + A
-    // Result = (A * ((B - 1) - 1) + A) + A
-    type Result = < A as Add<<B as Mul<A>>::Result>>::Result;
+    type Result = <A as Add<<B as Mul<A>>::Result>>::Result;
 }
 
 
 pub struct Nil;
+
 pub struct List<A, B>(PhantomData<(A, B)>);
 
 pub trait ShapeTrait: ListTrait + ProdTrait + LenTrait + ListToVecTrait {}
@@ -132,7 +133,7 @@ impl<A, B> ProdTrait for List<A, B>
 }
 
 pub trait LenTrait {
-    type Len: Unsigned + NonZero + ArrayLength<usize>;
+    type Len: Unsigned + NonZero;
 }
 
 impl<A: Unsigned + NonZero> LenTrait for List<A, Nil>
@@ -145,7 +146,7 @@ impl<A, B> LenTrait for List<A, B>
         A: Unsigned + NonZero,
         B: LenTrait,
         B::Len: ops::Add<typenum::B1>,
-        Add1<B::Len>: Unsigned + NonZero + ArrayLength<usize>,
+        Add1<B::Len>: Unsigned + NonZero,
 {
     type Len = Add1<B::Len>;
 }

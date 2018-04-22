@@ -29,7 +29,7 @@ fn main() {
     use c_som::type_compute::{Succ,Zero};
     type Three = Succ<Succ<Succ<Zero>>>;
     type Two = Succ<Succ<Zero>>;
-    type Six = <Three as c_som::type_compute::Mul<Two>>::Result;
+    type Six = <Two as c_som::type_compute::Mul<Three>>::Result;
     println!("{}" ,<Six as c_som::type_compute::ToUsize>::to_usize());
     println!("{:?}", unsafe { std::intrinsics::type_name::<Six>() });
     println!("{:?}", unsafe { std::intrinsics::type_name::<ShapeTest>() });
