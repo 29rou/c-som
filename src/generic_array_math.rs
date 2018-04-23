@@ -1,18 +1,18 @@
-extern crate generic_array;
 extern crate core;
-extern crate typenum;
+extern crate generic_array;
 extern crate num;
 extern crate num_traits;
 extern crate rand;
+extern crate typenum;
 
-use shape::{ShapeTrait, Prod};
-use std::{default::Default, marker::PhantomData, fmt::Debug, mem::uninitialized};
 //use std::ops::{Deref, DerefMut, Add, AddAssign, Sub, SubAssign};
-use self::generic_array::{GenericArray, ArrayLength};
-use self::typenum::Unsigned;
+use self::generic_array::{ArrayLength, GenericArray};
 use self::num::FromPrimitive;
 use self::num_traits::NumAssign;
-use self::rand::{ThreadRng, distributions::{Normal, IndependentSample}};
+use self::rand::{distributions::{IndependentSample, Normal}, ThreadRng};
+use self::typenum::Unsigned;
+use shape::{Prod, ShapeTrait};
+use std::{default::Default, fmt::Debug, marker::PhantomData, mem::uninitialized};
 
 #[derive(PartialEq, Hash)]
 pub struct MathArrayBase<Type, Shape>
@@ -252,11 +252,10 @@ impl<Type, Shape> self::core::iter::FromIterator<Type> for MathArrayBase<Type, S
         Shape: ShapeTrait,
         Prod<Shape>: ArrayLength<Type>,
 {
-    fn from_iter<I>(iter: I) -> Self
-        where I: IntoIterator<Item=Type>,
-    {
-        use self::core::iter::FromIterator;;
-        let item = < GenericArray < Type, Prod < Shape >> as FromIterator::< Type >> ::from_iter(iter);
-        Self { item: item, _phantom: PhantomData }
+    fn from_iter<I: IntoIterator<Item=Type>>(iter: I) -> Self {
+        Self {
+            item: self::core::iter::FromIterator::<Type>::from_iter(iter),
+            _phantom: PhantomData,
+        }
     }
 }
