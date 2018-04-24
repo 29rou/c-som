@@ -1,14 +1,27 @@
-use std::{ops, marker::PhantomData};
+use std::{marker::PhantomData, ops};
 
 pub struct Zero;
 
+impl Zero {
+    const fn to_usize(&self) -> usize {
+        0
+    }
+}
+
 pub struct Succ<N>(PhantomData<N>);
 
-pub trait Nat {}
 
-impl Nat for Zero {}
+pub trait Nat {
+    type Previous: Nat;
+}
 
-impl<N: Nat> Nat for Succ<N> {}
+impl Nat for Zero {
+    type Previous = Zero;
+}
+
+impl<N: Nat> Nat for Succ<N> {
+    type Previous = N;
+}
 
 pub trait ToUsize: Nat {
     fn to_usize() -> usize;

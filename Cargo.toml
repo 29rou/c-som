@@ -38,3 +38,14 @@ panic = "unwind"
 rpath = false
 incremental = true
 overflow-checks = true
+
+[profile.test]
+codegen-units = 1
+debug = true
+debug-assertions = true
+lto = false
+opt-level = 3
+panic = "unwind"
+rpath = false
+incremental = true
+overflow-checks = true

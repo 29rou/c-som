@@ -8,7 +8,6 @@ extern crate typenum;
 //use std::ops::{Deref, DerefMut, Add, AddAssign, Sub, SubAssign};
 use self::generic_array::{ArrayLength, GenericArray};
 use self::num::FromPrimitive;
-use self::num_traits::NumAssign;
 use self::rand::{distributions::{IndependentSample, Normal}, ThreadRng};
 use self::typenum::Unsigned;
 use shape::{Prod, ShapeTrait};
@@ -40,13 +39,12 @@ impl<Type, Shape> MathArrayBase<Type, Shape>
     pub fn new_rnd(normal: &Normal, rng: &mut ThreadRng) -> Self
     {
         use std::iter::{FromIterator, repeat};
+        let array_length = Shape::Prod::to_usize();
         let normal_rnd = |normal: &Normal, rng: &mut ThreadRng| -> Type{
-            let rand = normal.ind_sample(rng);
-            FromPrimitive::from_f64(rand).unwrap()
+            FromPrimitive::from_f64(normal.ind_sample(rng)).unwrap()
         };
-        let rnd_iter = repeat(()).map(|()| normal_rnd(&normal, rng));
-        let item = GenericArray::from_iter(rnd_iter.take(Shape::Prod::to_usize()));
-        Self { item: item, _phantom: PhantomData }
+        let rnd_iter = repeat(()).map(|()| normal_rnd(&normal, rng)).take(array_length);
+        Self { item: GenericArray::from_iter(rnd_iter), _phantom: PhantomData }
     }
     #[inline]
     pub fn as_slice(&self) -> &[Type] {
